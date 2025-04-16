@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { IUser } from "../types/user";
+import { IUser } from "../types/user.types";
 
 interface IUserModel extends mongoose.Model<IUser> {
   // Add any static methods here if needed

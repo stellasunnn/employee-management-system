@@ -12,28 +12,6 @@ interface LoginForm {
 }
 
 const Login = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginForm>();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { loading, error, token } = useSelector((state: RootState) => state.auth);
-
-  useEffect(() => {
-    if (token) {
-      navigate('/');
-    }
-  }, [token, navigate]);
-
-  const onSubmit = async (data: LoginForm) => {
-    dispatch(clearError());
-    const result = await dispatch(login(data));
-    if (login.fulfilled.match(result)) {
-      navigate('/');
-    }
-  };
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">

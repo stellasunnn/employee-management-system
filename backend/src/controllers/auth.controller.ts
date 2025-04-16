@@ -1,18 +1,16 @@
-import express from "express";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User";
-import { auth, AuthRequest } from "../middleware/auth";
-import { IUser } from "../types/user";
+import { AuthRequest } from "../middleware/auth.middleware";
 
-const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const REGISTRATION_TOKEN = "abc123"; // Hardcoded for MVP
 
-// Register new user
-router.post("/register", async (req, res) => {
+export const register = async (req: Request, res: Response) => {
   const { token, username, email, password } = req.body;
 
   if (token !== REGISTRATION_TOKEN) {
+    console.log("token", token, username, email, password);
     return res.status(401).json({ message: "Invalid registration token" });
   }
 
@@ -36,10 +34,9 @@ router.post("/register", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-});
+};
 
-// Login user
-router.post("/login", async (req, res) => {
+export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   try {
@@ -64,10 +61,9 @@ router.post("/login", async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-});
+};
 
-// Get current user
-router.get("/me", auth, async (req: AuthRequest, res) => {
+export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "User not found" });
@@ -77,6 +73,4 @@ router.get("/me", auth, async (req: AuthRequest, res) => {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
-});
-
-export default router;
+};
