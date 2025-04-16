@@ -50,7 +50,6 @@ export const login = createAsyncThunk(
   async ({ username, password }: { username: string; password: string }) => {
     try {
       const data = await loginApi({ username, password });
-      console.log('data', data);
       localStorage.setItem('token', data.token);
       return data;
     } catch (error: any) {
