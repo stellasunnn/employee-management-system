@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { login as loginApi, register as registerApi, loadUser as loadUserApi } from '../../api/auth';
 
 interface User {
   id: string;
@@ -35,29 +35,39 @@ export const register = createAsyncThunk(
     email: string;
     password: string;
   }) => {
-    const response = await axios.post('/api/auth/register', { token, username, email, password });
-    localStorage.setItem('token', response.data.token);
-    return response.data;
+    try {
+      const data = await registerApi({ token, username, email, password });
+      localStorage.setItem('token', data.token);
+      return data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Registration failed');
+    }
   },
 );
 
 export const login = createAsyncThunk(
   'auth/login',
   async ({ username, password }: { username: string; password: string }) => {
-    const response = await axios.post('/api/auth/login', { username, password });
-    localStorage.setItem('token', response.data.token);
-    return response.data;
+    try {
+      const data = await loginApi({ username, password });
+      console.log('data', data);
+      localStorage.setItem('token', data.token);
+      return data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Login failed');
+    }
   },
 );
 
 export const loadUser = createAsyncThunk('auth/loadUser', async () => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('No token found');
-
-  const response = await axios.get('/api/auth/me', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token found');
+    const data = await loadUserApi(token);
+    return data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to load user');
+  }
 });
 
 const authSlice = createSlice({

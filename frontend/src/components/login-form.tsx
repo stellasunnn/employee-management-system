@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '@/store/slices/authSlice';
 import { RootState, AppDispatch } from '@/store/store';
 import { useEffect } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 interface LoginFormData {
   username: string;
   password: string;
@@ -21,6 +21,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     formState: { errors },
   } = useForm<LoginFormData>();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -29,7 +30,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
   const onSubmit = async (data: LoginFormData) => {
     dispatch(clearError());
-    await dispatch(login(data));
+    const result = await dispatch(login(data));
+
+    if (login.fulfilled.match(result)) {
+      navigate('/');
+    }
   };
 
   return (
@@ -55,9 +60,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a href="#" className="ml-auto inline-block text-sm underline-offset-4 hover:underline">
-                    Forgot your password?
-                  </a>
                 </div>
                 <Input
                   id="password"
@@ -71,15 +73,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
-              <Button variant="outline" className="w-full" disabled={loading}>
-                Login with Google
-              </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{' '}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
             </div>
           </form>
         </CardContent>

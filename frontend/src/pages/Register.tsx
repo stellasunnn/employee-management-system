@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { register, clearError } from '../store/slices/authSlice';
-import { RootState } from '../store/store';
+import { register as registerUser, clearError } from '../store/slices/authSlice';
+import { RootState, AppDispatch } from '../store/store';
 import { useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -23,7 +23,7 @@ const Register = () => {
     watch,
     formState: { errors },
   } = useForm<RegisterForm>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
@@ -38,7 +38,7 @@ const Register = () => {
 
     dispatch(clearError());
     const result = await dispatch(
-      register({
+      registerUser({
         token,
         username: data.username,
         email: data.email,
@@ -46,7 +46,7 @@ const Register = () => {
       }),
     );
 
-    if (register.fulfilled.match(result)) {
+    if (registerUser.fulfilled.match(result)) {
       navigate('/');
     }
   };
