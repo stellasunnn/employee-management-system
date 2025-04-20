@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 
 // Import routes
 import authRoutes from "./routes/auth.routes";
+import onboardingRoutes from "./routes/onboarding.routes";
 
 import { notFound, errorHandler } from "./middleware/error.middleware";
 import connectDB from "./config/db";
@@ -29,6 +30,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/onboarding", onboardingRoutes);
 
 // Error handling middleware
 app.use(notFound);
