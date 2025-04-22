@@ -36,3 +36,13 @@ export const auth = async (
     res.status(401).json({ message: "Token is not valid" });
   }
 };
+
+export const authenticateHR = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // TODO: Implement proper HR authentication
+  // For now, just pass through
+  next();
+};
