@@ -1,15 +1,13 @@
 import api from './base'; 
 
 const onboardingApi = {
-  submitOnboardingForm: async (formData: FormData) => {
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data', 
-      },
-    };
-    
-    return api.post('/onboarding', formData, config);
-  },
+    submitOnboardingForm: async (formData: any) => {
+        return api.post('/onboarding/submit', formData, {
+            headers: {
+            'Content-Type': 'application/json',
+            }
+        });
+        },
   
   saveOnboardingDraft: async (data: any) => {
     return api.post('/onboarding/draft', data);

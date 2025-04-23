@@ -1,152 +1,85 @@
-// import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-// import onboardingApi from '../../api/onboarding'
+// onboardingSlice.ts
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import onboardingApi from '@/api/onboarding';
+import { RootState } from '../store';
 
-// // 1. define form data and state interfaces
-// // 2. define initial state
-// // 3. create async thunks for form submission
-// // 4. create async thunks for setting previous email
-// // 5. create the redux slice
-// // 6. define synchronous reducers (simple actions dont need async thunks) 
-// // 7. define async reducers (async thunks)
-// // 8. export actions and reducer
-
-
-// export type OnboardingStatus = 'never_submitted' | 'pending' | 'approved' | 'rejected';
-// export type Gender = 'male' | 'female' | 'not_specified';
-
-// export interface Address {
-//     buildingApt?: string;
-//     street: string;
-//     city: string;
-//     state: string;
-//     zipCode: string;
-// }
-
-// export type ResidentStatus = 'Citizen' | 'Green Card' | 'non-resident';
-// export type VisaStatus = 'H1-B' | 'L2' | 'F1(CPT/OPT)' | 'H4' | 'Other';
-
-// export interface WorkAuthorization {
-//     type: VisaStatus;
-//     optReceipt?: string; 
-//     otherVisaTitle?: string;
-//     startDate: string;
-//     endDate: string;
-//     documents: Document[];
-//   }
-
-// export interface ReferencePerson {
-//     firstName: string;
-//     lastName: string;
-//     middleName?: string;
-//     phone?: string;
-//     email?: string;
-//     relationship: string;
-// }
-
-// export interface EmergencyContact {
-//     firstName: string;
-//     lastName: string;
-//     middleName?: string;
-//     phone?: string;
-//     email?: string;
-//     relationship: string;
-// }
-
-// export interface Document {
-//     id: string;
-//     name: string;
-//     type: string;
-//     url: string;
-//     previewUrl: string;
-//   }
+// Define your interfaces
+interface OnboardingFormData {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  preferredName?: string;
   
+  // Add other fields as needed
+}
 
-// export interface OnboardingFormData {
-//     firstName: string;
-//     lastName: string;
-//     middleName?: string;
-//     prefferredName?: string;
+interface OnboardingState {
+  formData: OnboardingFormData;
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
+}
 
-//     profilePicture?: Document;
+// Simplified createAsyncThunk without complex generics
+export const submitOnboardingForm = createAsyncThunk(
+  'onboarding/submit',
+  async (formData: OnboardingFormData, { rejectWithValue }) => {
+    try {
+      const response = await onboardingApi.submitOnboardingForm(formData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Submission failed'
+      );
+    }
+  }
+);
 
-//     address: Address;
-//     cellPhone: string;
-//     workPhone?: string;
-//     email: string; // prefilled 
+// Initial state
+const initialState: OnboardingState = {
+  formData: {
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    preferredName: '',
+  },
+  status: 'idle',
+  error: null,
+};
 
-//     ssn: string;
-//     dateOfBirth: string;
-//     gender: Gender;
+const onboardingSlice = createSlice({
+  name: 'onboarding',
+  initialState,
+  reducers: {
+    updateField: (state, action) => {
+      const { field, value } = action.payload;
+      state.formData[field as keyof OnboardingFormData] = value;
+    },
+    resetForm: (state) => {
+      state.formData = initialState.formData;
+      state.status = 'idle';
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(submitOnboardingForm.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(submitOnboardingForm.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+      })
+      .addCase(submitOnboardingForm.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string || 'Failed to submit form';
+      });
+  },
+});
 
-//     residentStatus: ResidentStatus;
-//     workAuthorization?: WorkAuthorization;
-//     referencePerson?: ReferencePerson;
-//     emergencyContact?: EmergencyContact[];
+export const { updateField, resetForm } = onboardingSlice.actions;
 
-//     driversLicense?: Document;
-//     allDocuments?: Document[];
-    
-//     status: OnboardingStatus;
-//     feedback? : string; //only when rejected
-// }
+export const selectOnboardingData = (state: RootState) => state.onboarding.formData;
+export const selectOnboardingStatus = (state: RootState) => state.onboarding.status;
+export const selectOnboardingError = (state: RootState) => state.onboarding.error;
 
-// export interface OnboardingState {
-//     applicationData: OnboardingFormData | null;
-//     loading: boolean;
-//     submitting: boolean;
-//     error: string | null;
-//     success: boolean;
-//     currentStep: number;
-//     isEditable: boolean;
-//     uploadProgress: {
-//       [key: string]: number;
-//     };
-//     registrationEmail: string | null
-//   }
-
-// const initialState: OnboardingState = {
-//     applicationData: null,
-//     loading: false,
-//     submitting: false,
-//     error: null,
-//     success: false,
-//     currentStep: 1,
-//     isEditable: true,
-//     uploadProgress: {},
-//     registrationEmail: null
-// };
-
-// // set email from token
-// // export const setRegistrationEmail = createAsyncThunk(
-// //     'onboarding/setEmail',
-// //     async (email: string) => {
-// //       return email;
-// //     }
-// //   );
-
-
-// // Fetch onboarding application data
-// export const fetchOnboardingData = createAsyncThunk(
-//     'onboarding/fetchData'
-// )
-
-
-// export const submitOnboardingForm = createAsyncThunk(
-//     'onboarding/submit',
-//     async (formData: FormData, { rejectWithValue }) => {
-//       try {
-//         const response = await onboardingApi.submitOnboardingForm(formData);
-//         return response.data;
-//       } catch (error: any) {
-//         return rejectWithValue(
-//           error.response?.data?.message || 'Submission failed'
-//         );
-//       }
-//     }
-//   );
-
-// // const onboardingSlice = createSlice({
-// //     name: 'onboarding'
-// // })
-
-// export default onboardingSlice.reducer;
+export default onboardingSlice.reducer;
