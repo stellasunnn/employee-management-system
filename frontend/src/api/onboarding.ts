@@ -2,7 +2,7 @@ import api from './base';
 
 const onboardingApi = {
     submitOnboardingForm: async (formData: any) => {
-        return api.post('/onboarding/submit', formData, {
+        return api.post('/onboarding/application', formData, {
             headers: {
             'Content-Type': 'application/json',
             }

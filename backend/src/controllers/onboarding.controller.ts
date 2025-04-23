@@ -35,6 +35,7 @@ export const createOnboardingApplication = async (req: AuthRequest, res: Respons
             res.status(201).json(application);
         }
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Error creating onboarding application" });
     }
 }
