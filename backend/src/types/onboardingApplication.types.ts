@@ -10,8 +10,8 @@ export interface IOnboardingApplication extends Document {
     preferredName?: string;
     profilePicture?: string;
     address: {
-        buildingNumber?: string;
-        street: string;
+        addressOne: string;
+        addressTwo?: string;
         city: string;
         state: string;
         zipCode: string;

@@ -32,9 +32,12 @@ const formSchema = z.object({
   preferredName: z.string().optional(),
 
 //   //address
-//   buildingApt: z.string().min(1, {
-//     message: 'Building/Apt name is required.',
-//   }),
+  address: z.object({
+    addressOne: z.string().min(1, {
+    message: 'Address line 1 is required.',
+  }),
+})
+  
 //   streetName: z.string().min(1, {
 //     message: 'Street name is required.',
 //   }),
@@ -84,7 +87,9 @@ export default function OnboardingForm() {
         middleName: '',
         lastName: '',
         preferredName: '',
-        // buildingApt: '',
+        address: {
+            addressOne: '',
+        },
         // streetName: '',
         // city: '',
         // state: '',
@@ -187,6 +192,24 @@ export default function OnboardingForm() {
                 </FormItem>
               )}
             />
+          </div>
+
+          <div>
+            <FormField
+                control={form.control}
+                name="address.addressOne"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex">
+                        Address line 1 <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                        <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
           </div>
 
           <Button type="submit" className="w-full">

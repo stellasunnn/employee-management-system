@@ -9,7 +9,9 @@ interface OnboardingFormData {
   middleName?: string;
   lastName: string;
   preferredName?: string;
-  
+  address: {
+    addressOne: string;
+  }
   // Add other fields as needed
 }
 
@@ -41,6 +43,9 @@ const initialState: OnboardingState = {
     middleName: '',
     lastName: '',
     preferredName: '',
+    address: {
+        addressOne: '',
+    },  
   },
   status: 'idle',
   error: null,

@@ -20,8 +20,8 @@ const OnboardingApplicationSchema: Schema = new Schema({
     preferredName: String,
     profilePicture: String,
     address: {
-        buildingNumber: String,
-        street: { type: String, required: true },
+        addressOne: { type: String, required: true },
+        addressTwo: String,
         city: { type: String, required: true },
         state: { type: String, required: true },
         zipCode: { type: String, required: true },  
