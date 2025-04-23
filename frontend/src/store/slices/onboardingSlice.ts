@@ -1,9 +1,7 @@
-// onboardingSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import onboardingApi from '@/api/onboarding';
 import { RootState } from '../store';
 
-// Define your interfaces
 interface OnboardingFormData {
   firstName: string;
   middleName?: string;
@@ -11,8 +9,17 @@ interface OnboardingFormData {
   preferredName?: string;
   address: {
     addressOne: string;
-  }
-  // Add other fields as needed
+    addressTwo?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+};
+cellPhone: string;
+workPhone?: string;
+email: string;
+ssn: string;
+dateOfBirth: string;
+gender: "male" | "female" | "prefer_not_to_say" | undefined;
 }
 
 interface OnboardingState {
@@ -21,7 +28,6 @@ interface OnboardingState {
   error: string | null;
 }
 
-// Simplified createAsyncThunk without complex generics
 export const submitOnboardingForm = createAsyncThunk(
   'onboarding/submit',
   async (formData: OnboardingFormData, { rejectWithValue }) => {
@@ -45,7 +51,17 @@ const initialState: OnboardingState = {
     preferredName: '',
     address: {
         addressOne: '',
-    },  
+        addressTwo: '',
+        city: '',
+        state: '',
+        zipCode: '',
+      },
+      cellPhone: '',
+      workPhone: '',
+      email: 'user@example.com', // Pre-filled example
+      ssn: '',
+      dateOfBirth: '',
+      gender: undefined,
   },
   status: 'idle',
   error: null,

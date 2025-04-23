@@ -17,10 +17,13 @@ export interface IOnboardingApplication extends Document {
         zipCode: string;
     };
     cellPhone: string;
+    workPhone?: string;
     email: string;
     ssn: string;
     dateOfBirth: Date;
-    gender: "male" | "female" | "non-specified";
+    gender: "male" | "female" | "prefer_not_to_say";
+
+
     citizenshipStatus: {
         isPermanentResident: boolean;
         type: "green_card" | "citizen" | "work_authorization";

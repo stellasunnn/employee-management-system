@@ -1,16 +1,12 @@
-'use client';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'react-hot-toast'; // Optional for notifications
+import { toast } from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  updateField,
   resetForm,
   submitOnboardingForm,
   selectOnboardingData,
@@ -19,7 +15,13 @@ import {
 } from '@/store/slices/onboardingSlice';
 import { useEffect } from 'react';
 import { AppDispatch } from '@/store/store';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+enum Gender {
+  Male = 'male',
+  Female = 'female',
+  PreferNotToSay = 'prefer_not_to_say',
+}
 
 const formSchema = z.object({
   firstName: z.string().min(1, {
@@ -31,90 +33,81 @@ const formSchema = z.object({
   }),
   preferredName: z.string().optional(),
 
-//   //address
+  //address
   address: z.object({
     addressOne: z.string().min(1, {
-    message: 'Address line 1 is required.',
+      message: 'Address line 1 is required.',
+    }),
+    addressTwo: z.string().min(1, {
+      message: 'Address line 2 is required.',
+    }),
+    city: z.string().min(1, {
+      message: 'City is required.',
+    }),
+    state: z.string().min(1, {
+      message: 'State is required.',
+    }),
+    zipCode: z.string().min(5, {
+      message: 'Valid ZIP code is required.',
+    }),
   }),
-})
-  
-//   streetName: z.string().min(1, {
-//     message: 'Street name is required.',
-//   }),
-//   city: z.string().min(1, {
-//     message: 'City is required.',
-//   }),
-//   state: z.string().min(1, {
-//     message: 'State is required.',
-//   }),
-//   zipCode: z.string().min(5, {
-//     message: 'Valid ZIP code is required.',
-//   }),
 
-//   // Contact Information
-//   cellPhone: z.string().regex(/^\d{10}$/, {
-//     message: 'Please enter a valid 10-digit phone number.',
-//   }),
-//   workPhone: z.string().regex(/^\d{10}$/, {
-//     message: 'Please enter a valid 10-digit phone number.',
-//   }).optional(),
-//   email: z.string().email({
-//     message: 'Please enter a valid email address.',
-//   }),
+  // Contact Information
+  cellPhone: z.string().regex(/^\d{10}$/, {
+    message: 'Please enter a valid 10-digit phone number.',
+  }),
+  workPhone: z.string().optional(),
+  email: z.string().email({
+    message: 'Please enter a valid email address.',
+  }),
 
-//   // identification
-//   ssn: z.string().regex(/^\d{9}$/, {
-//     message: 'Please enter a valid 9-digit SSN.',
-//   }),
-//   dateOfBirth: z.date({
-//     required_error: "Date of birth is required.",
-//   }),
-//   gender: z.enum(['male', 'female', 'prefer_not_to_say'], {
-//     required_error: "Please select a gender option.",
-//   }),
+  // identification
+  ssn: z.string().regex(/^\d{9}$/, {
+    message: 'Please enter a valid 9-digit SSN.',
+  }),
+  dateOfBirth: z.string().datetime({
+    message: 'Date of birth is required.',
+  }),
+  gender: z.nativeEnum(Gender, { message: 'Gender is required.' }),
 });
 
 export default function OnboardingForm() {
-    const dispatch = useDispatch<AppDispatch>();
-    const formData = useSelector(selectOnboardingData);
-    const status = useSelector(selectOnboardingStatus);
-    const error = useSelector(selectOnboardingError);
-  // Initialize the form with default values and the zodResolver
+  const dispatch = useDispatch<AppDispatch>();
+  const formData = useSelector(selectOnboardingData);
+  const status = useSelector(selectOnboardingStatus);
+  const error = useSelector(selectOnboardingError);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        firstName: '',
-        middleName: '',
-        lastName: '',
-        preferredName: '',
-        address: {
-            addressOne: '',
-        },
-        // streetName: '',
-        // city: '',
-        // state: '',
-        // zipCode: '',
-        // cellPhone: '',
-        // workPhone: '',
-        // email: 'user@example.com', // Pre-filled example
-        // ssn: '',
-        // gender: 'prefer_not_to_say',
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      preferredName: '',
+      address: {
+        addressOne: '',
+        addressTwo: '',
+        city: '',
+        state: '',
+        zipCode: '',
+      },
+      cellPhone: '',
+      workPhone: '',
+      email: 'user@example.com', // Pre-filled example
+      ssn: '',
+      dateOfBirth: '',
+      gender: undefined,
     },
   });
 
 
-
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Only dispatch to Redux when the form is submitted
     dispatch(submitOnboardingForm(values));
-
   }
 
-  // Show toast notifications based on submission status
   useEffect(() => {
     if (status === 'succeeded') {
       toast.success('Form submitted successfully!');
-      // Reset the form after successful submission
       form.reset();
       dispatch(resetForm());
     } else if (status === 'failed' && error) {
@@ -122,14 +115,14 @@ export default function OnboardingForm() {
     }
   }, [status, error, form, dispatch]);
 
-
   return (
     <div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
       <h2 className="text-xl font-bold mb-4">Onboarding Form</h2>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4"> 
+          {/* name */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
             <FormField
               control={form.control}
               name="firstName"
@@ -194,23 +187,210 @@ export default function OnboardingForm() {
             />
           </div>
 
+          {/* address */}
           <div>
-            <FormField
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              <FormField
                 control={form.control}
                 name="address.addressOne"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel className="flex">
-                        Address line 1 <span className="text-red-500 ml-1">*</span>
+                      Address line 1 <span className="text-red-500 ml-1">*</span>
                     </FormLabel>
                     <FormControl>
-                        <Input {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
+              />
+
+              <FormField
+                control={form.control}
+                name="address.addressTwo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      Address line 2 <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="address.city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      City <span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address.state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      State<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address.zipCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      Zipcode<span className="text-red-500 ml-1">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
+
+          {/* phone number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            <FormField
+              control={form.control}
+              name="cellPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex">
+                    Cell Phone<span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="workPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex">
+                    Work Phone<span className="text-red-500 ml-1"></span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          {/* email */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex mt-8">
+                  Email<span className="text-red-500 ml-1">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          ></FormField>
+          {/* ssn & date of birth */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            <FormField
+              control={form.control}
+              name="ssn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex">
+                    SSN<span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex">
+                    Date of Birth<span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      value={field.value?.split('T')[0] || ''}
+                      onChange={(e) => {
+                        const value = e.target.value ? `${e.target.value}T00:00:00Z` : '';
+                        field.onChange(value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* gender */}
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex mt-8">
+                  Gender<span className="text-red-500 ml-1">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={"placeholder"} disabled>
+                        Choose gender
+                      </SelectItem>
+                      <SelectItem value={Gender.Male}>Male</SelectItem>
+                      <SelectItem value={Gender.Female}>Female</SelectItem>
+                      <SelectItem value={Gender.PreferNotToSay}>Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <Button type="submit" className="w-full">
             Submit
