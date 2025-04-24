@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
 import {
@@ -13,7 +14,7 @@ import {
   selectOnboardingStatus,
   selectOnboardingError,
 } from '@/store/slices/onboardingSlice';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -32,6 +33,9 @@ const formSchema = z.object({
     message: 'Last name is required.',
   }),
   preferredName: z.string().optional(),
+
+  //profile picture
+  profilePicture: z.instanceof(FileList).optional(),
 
   //address
   address: z.object({
@@ -71,11 +75,14 @@ const formSchema = z.object({
   gender: z.nativeEnum(Gender, { message: 'Gender is required.' }),
 });
 
+const defaultAvatarUrl =
+  'https://img.freepik.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5464.jpg';
 export default function OnboardingForm() {
   const dispatch = useDispatch<AppDispatch>();
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
   const error = useSelector(selectOnboardingError);
+  const [avatarPreview, setAvatarPreview] = useState(defaultAvatarUrl);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -84,6 +91,7 @@ export default function OnboardingForm() {
       middleName: '',
       lastName: '',
       preferredName: '',
+      profilePicture: undefined,
       address: {
         addressOne: '',
         addressTwo: '',
@@ -99,7 +107,6 @@ export default function OnboardingForm() {
       gender: undefined,
     },
   });
-
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     dispatch(submitOnboardingForm(values));
@@ -181,6 +188,35 @@ export default function OnboardingForm() {
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* profile picture */}
+          <div className="flex flex-row items-center">
+            <FormField
+              control={form.control}
+              name="profilePicture"
+              render={({ field }) => (
+                <FormItem className="w-full">
+                  <div className="flex flex-row items-center w-full">
+                    <div className="flex-grow mr-10">
+                      <FormLabel>Upload profile picture</FormLabel>
+                      <FormControl>
+                        <Input className="mt-4" placeholder="enter image url" value={avatarPreview} />
+                      </FormControl>
+                    </div>
+
+                    <div className="text-center">
+                      <Avatar className="w-28 h-28">
+                        <AvatarImage src={avatarPreview} alt="Profile Picture" />
+                        <AvatarFallback>CN</AvatarFallback>
+                      </Avatar>
+                      <p>preview</p>
+                    </div>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -378,7 +414,7 @@ export default function OnboardingForm() {
                       <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={"placeholder"} disabled>
+                      <SelectItem value={'placeholder'} disabled>
                         Choose gender
                       </SelectItem>
                       <SelectItem value={Gender.Male}>Male</SelectItem>
