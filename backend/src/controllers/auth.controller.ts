@@ -2,19 +2,40 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { RegistrationToken } from "../models/RegistrationToken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-const REGISTRATION_TOKEN = "abc123"; // Hardcoded for MVP
 
 export const register = async (req: Request, res: Response) => {
   const { token, username, email, password } = req.body;
 
-  if (token !== REGISTRATION_TOKEN) {
-    console.log("token", token, username, email, password);
-    return res.status(401).json({ message: "Invalid registration token" });
-  }
-
   try {
+    // Find the registration token
+    const registrationToken = await RegistrationToken.findOne({ token });
+
+    if (!registrationToken) {
+      return res.status(401).json({ message: "Invalid registration token" });
+    }
+
+    // Check if token has expired
+    if (registrationToken.expiresAt < new Date()) {
+      return res
+        .status(401)
+        .json({ message: "Registration token has expired" });
+    }
+
+    // Check if token has already been used
+    if (registrationToken.status === "registered") {
+      return res.status(401).json({ message: "Token has already been used" });
+    }
+
+    // Check if email matches the token's email
+    if (registrationToken.email !== email) {
+      return res
+        .status(401)
+        .json({ message: "Email does not match the token's email" });
+    }
+
     // Check if user already exists
     let user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
@@ -25,11 +46,15 @@ export const register = async (req: Request, res: Response) => {
     user = new User({ username, email, password });
     await user.save();
 
+    // Update token status to registered
+    registrationToken.status = "registered";
+    await registrationToken.save();
+
     // Generate JWT
     const payload = { id: user._id };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1d" });
+    const authToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "1d" });
 
-    res.json({ token });
+    res.json({ token: authToken });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
