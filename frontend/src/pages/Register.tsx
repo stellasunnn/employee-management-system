@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { register as registerUser, clearError } from '../store/slices/authSlice';
 import { RootState, AppDispatch } from '../store/store';
 import { useEffect } from 'react';
@@ -16,7 +16,8 @@ interface RegisterForm {
 }
 
 const Register = () => {
-  const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const {
     register,
     handleSubmit,
@@ -123,10 +124,16 @@ const Register = () => {
               {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
+            <div className="text-center text-sm">
+              Already have an account?{' '}
+              <a href="/login" className="text-primary hover:underline">
+                Login here
+              </a>
+            </div>
           </CardFooter>
         </form>
       </Card>

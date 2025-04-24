@@ -8,9 +8,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export const register = async (req: Request, res: Response) => {
   const { token, username, email, password } = req.body;
-
+  
   try {
-    // Find the registration token
     const registrationToken = await RegistrationToken.findOne({ token });
 
     if (!registrationToken) {
@@ -39,13 +38,13 @@ export const register = async (req: Request, res: Response) => {
     // Check if user already exists
     let user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
-      return res.status(400).json({ message: "User already exists" });
+      return res
+        .status(400)
+        .json({ message: "Username or email already exists" });
     }
 
-    // Create new user
-    user = new User({ username, email, password });
+    user = new User({ username, email, password, isAdmin: false });
     await user.save();
-
     // Update token status to registered
     registrationToken.status = "registered";
     await registrationToken.save();

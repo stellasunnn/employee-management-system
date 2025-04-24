@@ -33,7 +33,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     const result = await dispatch(login(data));
 
     if (login.fulfilled.match(result)) {
-      navigate('/');
+      navigate('/onboarding');
     }
   };
 
