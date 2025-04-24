@@ -15,8 +15,9 @@ const OnboardingApplicationSchema: Schema = new Schema({
     },
     rejectionFeedback: String,
     firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
     middleName: String,
+    lastName: { type: String, required: true },
+    
     preferredName: String,
     profilePicture: String,
     address: {
@@ -30,7 +31,7 @@ const OnboardingApplicationSchema: Schema = new Schema({
     email: { type: String, required: true },
     ssn: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
-    gender: { type: String, enum: ["male", "female", "non-specified"], required: true },
+    gender: { type: String, enum: ["male", "female", "prefer_not_to_say"], required: true },
     citizenshipStatus: {
         isPermanentResident: { type: Boolean, required: true },
         type: { type: String, enum: ["green_card", "citizen", "work_authorization"], required: true },

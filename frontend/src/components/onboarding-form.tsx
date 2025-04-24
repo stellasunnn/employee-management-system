@@ -35,7 +35,7 @@ const formSchema = z.object({
   preferredName: z.string().optional(),
 
   //profile picture
-  profilePicture: z.instanceof(FileList).optional(),
+  profilePicture: z.string().optional(),
 
   //address
   address: z.object({
@@ -91,8 +91,8 @@ export default function OnboardingForm() {
       middleName: '',
       lastName: '',
       preferredName: '',
-      profilePicture: undefined,
-      address: {
+      profilePicture:"",
+    address: {
         addressOne: '',
         addressTwo: '',
         city: '',
@@ -104,7 +104,7 @@ export default function OnboardingForm() {
       email: 'user@example.com', // Pre-filled example
       ssn: '',
       dateOfBirth: '',
-      gender: undefined,
+      gender: undefined
     },
   });
 
@@ -205,7 +205,13 @@ export default function OnboardingForm() {
                     <div className="flex-grow mr-10">
                       <FormLabel>Upload profile picture</FormLabel>
                       <FormControl>
-                        <Input className="mt-4" placeholder="enter image url" value={avatarPreview} />
+                        <Input className="mt-4" 
+                        placeholder="enter image url" 
+                        value={avatarPreview} 
+                        onChange={(e) => {
+                          setAvatarPreview(e.target.value);
+                          field.onChange(e);
+                        }} />
                       </FormControl>
                     </div>
 
