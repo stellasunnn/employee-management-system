@@ -12,9 +12,7 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "No visa application found" });
     }
 
-    const currentDocument = visa.documents.find(
-      (doc) => doc.type === visa.currentStep
-    );
+    const currentDocument = visa.documents[visa.documents.length - 1];
     let message = "";
 
     if (!currentDocument) {
@@ -25,7 +23,11 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
           message = getPendingMessage(visa.currentStep);
           break;
         case DocumentStatus.APPROVED:
-          message = getNextStepMessage(visa.currentStep);
+          if (currentDocument.type === DocumentType.I_20) {
+            message = "All documents have been approved.";
+          } else {
+            message = getNextStepMessage(visa.currentStep);
+          }
           break;
         case DocumentStatus.REJECTED:
           message = currentDocument.feedback;
@@ -127,12 +129,15 @@ export const approveVisaDocument = async (req: Request, res: Response) => {
     if (!visa) {
       return res.status(404).json({ message: "Visa application not found" });
     }
-
-    const currentDocument = visa.documents.find(
-      (doc) => doc.type === visa.currentStep
-    );
+    const currentDocument = visa.documents[visa.documents.length - 1];
     if (!currentDocument) {
       return res.status(400).json({ message: "No document to approve" });
+    }
+
+    if (currentDocument.status !== DocumentStatus.PENDING) {
+      return res
+        .status(400)
+        .json({ message: "Can only approve documents with pending status" });
     }
 
     currentDocument.status = DocumentStatus.APPROVED;
@@ -161,12 +166,14 @@ export const rejectVisaDocument = async (req: Request, res: Response) => {
     if (!visa) {
       return res.status(404).json({ message: "Visa application not found" });
     }
-
-    const currentDocument = visa.documents.find(
-      (doc) => doc.type === visa.currentStep
-    );
+    const currentDocument = visa.documents[visa.documents.length - 1];
     if (!currentDocument) {
       return res.status(400).json({ message: "No document to reject" });
+    }
+    if (currentDocument.status !== DocumentStatus.PENDING) {
+      return res
+        .status(400)
+        .json({ message: "Can only reject documents with pending status" });
     }
 
     currentDocument.status = DocumentStatus.REJECTED;
@@ -186,9 +193,41 @@ export const getInProgressVisaApplications = async (
   res: Response
 ) => {
   try {
-    const visas = await Visa.find({
-      "documents.status": DocumentStatus.PENDING,
-    }).populate("user", "name email");
+    const visas = await Visa.aggregate([
+      // 1. 先筛出有用户的申请
+      {
+        $match: {
+          user: { $exists: true },
+        },
+      },
+      // 2. 找到最后一个 document（按上传时间）
+      {
+        $addFields: {
+          lastDocument: { $arrayElemAt: ["$documents", -1] },
+          lastI20Doc: {
+            $last: {
+              $filter: {
+                input: "$documents",
+                as: "doc",
+                cond: { $eq: ["$$doc.type", "I_20"] },
+              },
+            },
+          },
+        },
+      },
+      // 3. 应用 in-progress 逻辑
+      {
+        $match: {
+          $or: [
+            { currentStep: { $ne: "I_20" } }, // 流程还没走完
+            { documents: { $size: 0 } }, // 还没提交任何材料
+            { "lastDocument.type": { $ne: "I_20" } }, // 最后一个不是 I_20
+            { "lastI20Doc.status": { $ne: "APPROVED" } }, // I_20 还没通过
+          ],
+        },
+      },
+      // 4. 如果你想带出 user 的 name/email，需要再 $lookup 或用 .populate in Mongoose
+    ]);
 
     res.json(visas);
   } catch (error) {
@@ -207,10 +246,19 @@ export const getAllVisaApplications = async (req: Request, res: Response) => {
 };
 
 // Helper functions
-function getNextDocumentType(currentType: DocumentType): DocumentType | null {
-  const types = Object.values(DocumentType);
-  const currentIndex = types.indexOf(currentType);
-  return currentIndex < types.length - 1 ? types[currentIndex + 1] : null;
+function getNextDocumentType(currentStep: DocumentType): DocumentType | null {
+  switch (currentStep) {
+    case DocumentType.OPT_RECEIPT:
+      return DocumentType.OPT_EAD;
+    case DocumentType.OPT_EAD:
+      return DocumentType.I_983;
+    case DocumentType.I_983:
+      return DocumentType.I_20;
+    case DocumentType.I_20:
+      return null;
+    default:
+      return null;
+  }
 }
 
 function getPendingMessage(type: DocumentType): string {
@@ -231,13 +279,13 @@ function getPendingMessage(type: DocumentType): string {
 function getNextStepMessage(type: DocumentType): string {
   switch (type) {
     case DocumentType.OPT_RECEIPT:
-      return "Please upload a copy of your OPT EAD";
+      return "Please upload a copy of your OPT RECEIPT";
     case DocumentType.OPT_EAD:
-      return "Please download and fill out the I-983 form";
+      return "Please upload a copy of your OPT EAD";
     case DocumentType.I_983:
-      return "Please send the I-983 along all necessary documents to your school and upload the new I-20";
+      return "Please upload a copy of the signed I-983";
     case DocumentType.I_20:
-      return "All documents have been approved";
+      return "Please upload a copy of your I-20";
     default:
       return "";
   }

@@ -2,25 +2,35 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import visaApi from '../../api/visa';
 
-export type DocumentStatus = 'pending' | 'approved' | 'rejected';
-export type DocumentType = 'opt_receipt' | 'opt_ead' | 'i983' | 'i20';
+export type DocumentType = 'OPT_RECEIPT' | 'OPT_EAD' | 'I_983' | 'I_20';
 
-interface Document {
+export enum DocumentStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export interface Document {
   type: DocumentType;
+  fileUrl: string;
   status: DocumentStatus;
-  feedback?: string;
-  fileUrl?: string;
-  uploadedAt?: string;
+  feedback: string;
+  uploadedAt: string;
+  reviewedAt?: string;
 }
 
 interface VisaState {
   documents: Document[];
+  currentStep: DocumentType | null;
+  message: string | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: VisaState = {
   documents: [],
+  currentStep: null,
+  message: null,
   loading: false,
   error: null,
 };
@@ -40,7 +50,11 @@ export const uploadDocument = createAsyncThunk(
 export const loadVisaDocuments = createAsyncThunk('visa/loadDocuments', async (_, { rejectWithValue }) => {
   try {
     const response = await visaApi.loadDocuments();
-    return response.data.documents;
+    return {
+      documents: response.data.documents,
+      currentStep: response.data.currentStep,
+      message: response.data.message,
+    };
   } catch (error: any) {
     return rejectWithValue(error.response?.data?.message || 'Failed to load documents');
   }
@@ -79,7 +93,9 @@ const visaSlice = createSlice({
       })
       .addCase(loadVisaDocuments.fulfilled, (state, action) => {
         state.loading = false;
-        state.documents = action.payload;
+        state.documents = action.payload.documents;
+        state.currentStep = action.payload.currentStep;
+        state.message = action.payload.message;
       })
       .addCase(loadVisaDocuments.rejected, (state, action) => {
         state.loading = false;
@@ -93,5 +109,7 @@ export const { clearError } = visaSlice.actions;
 export const selectVisaDocuments = (state: RootState) => state.visa.documents;
 export const selectVisaLoading = (state: RootState) => state.visa.loading;
 export const selectVisaError = (state: RootState) => state.visa.error;
+export const selectVisaCurrentStep = (state: RootState) => state.visa.currentStep;
+export const selectVisaMessage = (state: RootState) => state.visa.message;
 
 export default visaSlice.reducer;
