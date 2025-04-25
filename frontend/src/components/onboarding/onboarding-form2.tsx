@@ -16,11 +16,11 @@ import {
   selectOnboardingError,
   updateFormData,
 } from '@/store/slices/onboardingSlice';
+import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { pageTwoSchema } from './schema';
-
 
 const CitizenshipType = {
   GreenCard: 'green_card',
@@ -30,7 +30,7 @@ const CitizenshipType = {
 
 const WorkAuthorizationType = {
   H1B: 'H1-B',
-  H4: 'H4', 
+  H4: 'H4',
   L2: 'L2',
   F1: 'F1',
   Other: 'other',
@@ -38,8 +38,12 @@ const WorkAuthorizationType = {
 
 const DocumentType = {
   DriverLicense: 'driver_license',
+  WorkAuthorization: 'work_authorization',
+  OptReceipt: 'opt_receipt',
   Other: 'other',
 } as const;
+
+type DocumentTypeValues = (typeof DocumentType)[keyof typeof DocumentType];
 
 export default function CitizenshipAndReferencesForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,17 +53,14 @@ export default function CitizenshipAndReferencesForm() {
   const error = useSelector(selectOnboardingError);
 
   const [isPermanentResident, setIsPermanentResident] = useState(
-    formData.citizenshipStatus?.isPermanentResident || false
+    formData.citizenshipStatus?.isPermanentResident || false,
   );
 
-  const [workAuthType, setWorkAuthType] = useState<string>(
-    formData?.citizenshipStatus?.workAuthorizationType || ''
-  );
-  
+  const [workAuthType, setWorkAuthType] = useState<string>(formData?.citizenshipStatus?.workAuthorizationType || '');
+
   const [documents, setDocuments] = useState<File[]>([]);
-  const [documentPreviews, setDocumentPreviews] = useState<{[key: string]: string}>({});
+  const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
 
- 
   const form = useForm<z.infer<typeof pageTwoSchema>>({
     resolver: zodResolver(pageTwoSchema),
     defaultValues: {
@@ -78,67 +79,75 @@ export default function CitizenshipAndReferencesForm() {
         email: '',
         relationship: '',
       },
-      emergencyContacts: formData?.emergencyContacts || [{
-        firstName: '',
-        middleName: '',
-        lastName: '',
-        phone: '',
-        email: '',
-        relationship: '',
-      }],
+      emergencyContacts: formData?.emergencyContacts || [
+        {
+          firstName: '',
+          middleName: '',
+          lastName: '',
+          phone: '',
+          email: '',
+          relationship: '',
+        },
+      ],
       documents: formData?.documents || [],
     },
   });
 
   // Handle file upload
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, docType: string) => {
-    if (event.target.files && event.target.files[0]) {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
+    if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      const newDocuments = [...documents];
-      
-      // Create a document object matching schema
-      const newDoc = {
-        type: docType,
-        fileName: file.name,
-        fileUrl: 'temp-url', // Will be replaced by backend
-      };
-      
-      // Create preview
-      const fileReader = new FileReader();
-      fileReader.onload = (e) => {
-        setDocumentPreviews({
-          ...documentPreviews,
-          [docType]: e.target?.result as string
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', type);
+
+      dispatch(uploadDocument(formData))
+        .unwrap()
+        .then((response) => {
+          const currentDocuments = form.getValues().documents || [];
+
+          const newDocument = {
+            type: type,
+            fileName: file.name,
+            fileUrl: response.url,
+            uploadDate: new Date(),
+          };
+
+          dispatch(
+            updateFormData({
+              documents: [...currentDocuments, newDocument],
+            }),
+          );
+        })
+        .catch((error) => {
+          console.error('Upload failed:', error);
         });
-      };
-      fileReader.readAsDataURL(file);
-      
-      // Add file to state
-      setDocuments([...newDocuments, file]);
     }
   };
 
-//   // Handle back (to page 1)
-//   const handleBack = () => {
-//     const values = form.getValues();
-//     dispatch(updateFormData({
-//       ...formData,
-//       ...values
-//     }));
-//     navigate('/onboarding');
-//   };
+  // Handle back (to page 1)
+  const handleBack = () => {
+    const values = form.getValues();
+    dispatch(
+      updateFormData({
+        ...formData,
+        ...values,
+      }),
+    );
+    navigate('/onboarding');
+  };
 
-function onSubmit(values: z.infer<typeof pageTwoSchema>) {
+  function onSubmit(values: z.infer<typeof pageTwoSchema>) {
     // First, update Redux with the current form values
     dispatch(updateFormData(values));
-    
+
     // Then, get the latest combined data from Redux and submit it
     const completeData = {
       ...formData, // This is the existing data from page 1
-      ...values    // This is the current data from page 2
+      ...values, // This is the current data from page 2
     };
-    
-    console.log("Submitting combined data:", completeData);
+
+    console.log('Submitting combined data:', completeData);
     dispatch(submitOnboardingForm(completeData));
   }
 
@@ -160,7 +169,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
           {/* Citizenship Status */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Citizenship Status</h3>
-            
+
             <FormField
               control={form.control}
               name="citizenshipStatus.isPermanentResident"
@@ -193,7 +202,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 </FormItem>
               )}
             />
-            
+
             {/* Conditional fields based on citizenship status */}
             {isPermanentResident ? (
               <FormField
@@ -204,10 +213,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                     <FormLabel className="flex">
                       Status Type<span className="text-red-500 ml-1">*</span>
                     </FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status type" />
@@ -235,7 +241,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="citizenshipStatus.workAuthorizationType"
@@ -244,11 +250,11 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                       <FormLabel className="flex">
                         What is your work authorization?<span className="text-red-500 ml-1">*</span>
                       </FormLabel>
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           setWorkAuthType(value);
                           field.onChange(value);
-                        }} 
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -268,7 +274,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                     </FormItem>
                   )}
                 />
-                
+
                 {workAuthType === WorkAuthorizationType.Other && (
                   <FormField
                     control={form.control}
@@ -286,18 +292,18 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                     )}
                   />
                 )}
-                
+
                 {workAuthType === WorkAuthorizationType.F1 && (
                   <div className="border p-4 rounded-md bg-gray-50">
                     <p className="mb-2">Please upload your OPT Receipt</p>
-                    <Input 
-                      type="file" 
-                      accept=".pdf,.jpg,.jpeg,.png" 
-                      onChange={(e) => handleFileUpload(e, 'opt_receipt')}
+                    <Input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => handleFileUpload(e, DocumentType.OptReceipt)}
                     />
                   </div>
                 )}
-                
+
                 <FormField
                   control={form.control}
                   name="citizenshipStatus.expirationDate"
@@ -323,7 +329,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
               </div>
             )}
           </div>
-          
+
           {/* Reference Information */}
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold">Reference Information</h3>
@@ -342,7 +348,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -356,7 +362,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="reference.lastName"
@@ -373,7 +379,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 )}
               />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -390,7 +396,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="reference.email"
@@ -407,7 +413,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 )}
               />
             </div>
-            
+
             <FormField
               control={form.control}
               name="reference.relationship"
@@ -424,11 +430,11 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
               )}
             />
           </div>
-          
+
           {/* Emergency Contact */}
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold">Emergency Contact</h3>
-            
+
             {form.watch('emergencyContacts')?.map((_, index) => (
               <Card key={index} className="p-4">
                 <CardContent className="p-0 pt-4">
@@ -448,7 +454,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name={`emergencyContacts.${index}.middleName`}
@@ -461,7 +467,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name={`emergencyContacts.${index}.lastName`}
@@ -478,7 +484,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <FormField
                       control={form.control}
@@ -495,7 +501,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name={`emergencyContacts.${index}.email`}
@@ -511,7 +517,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name={`emergencyContacts.${index}.relationship`}
@@ -531,7 +537,7 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 </CardContent>
               </Card>
             ))}
-            
+
             <Button
               type="button"
               variant="outline"
@@ -539,23 +545,23 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 const currentContacts = form.getValues().emergencyContacts || [];
                 form.setValue('emergencyContacts', [
                   ...currentContacts,
-                  { firstName: '', middleName: '', lastName: '', phone: '', email: '', relationship: '' }
+                  { firstName: '', middleName: '', lastName: '', phone: '', email: '', relationship: '' },
                 ]);
               }}
             >
               Add Another Emergency Contact
             </Button>
           </div>
-          
+
           {/* Document Uploads */}
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold">Required Documents</h3>
-            
+
             <div className="border p-4 rounded-md">
               <FormLabel className="block mb-2">Driver's License</FormLabel>
-              <Input 
-                type="file" 
-                accept=".pdf,.jpg,.jpeg,.png" 
+              <Input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
                 onChange={(e) => handleFileUpload(e, DocumentType.DriverLicense)}
               />
               {documentPreviews[DocumentType.DriverLicense] && (
@@ -564,14 +570,14 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                 </div>
               )}
             </div>
-            
+
             {!isPermanentResident && (
               <div className="border p-4 rounded-md">
                 <FormLabel className="block mb-2">Work Authorization Document</FormLabel>
-                <Input 
-                  type="file" 
-                  accept=".pdf,.jpg,.jpeg,.png" 
-                  onChange={(e) => handleFileUpload(e, 'work_authorization')}
+                <Input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e, DocumentType.WorkAuthorization)}
                 />
                 {documentPreviews['work_authorization'] && (
                   <div className="mt-2">
@@ -581,15 +587,13 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
               </div>
             )}
           </div>
-          
+
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-6">
-            <Button type="button" variant="outline" >
+            <Button type="button" variant="outline" onClick={handleBack}>
               Back
             </Button>
-            <Button type="submit">
-              Submit
-            </Button>
+            <Button type="submit">Submit</Button>
           </div>
         </form>
       </Form>

@@ -32,7 +32,7 @@ export interface IOnboardingApplication extends Document {
         expirationDate?: Date;
     };
     documents: [{
-        type: "driver_license" | "other";
+        type: 'driver_license' | "work_authorization" | "opt_receipt" | 'other';
         fileName: string;
         fileUrl: string;
         uploadDate: Date;

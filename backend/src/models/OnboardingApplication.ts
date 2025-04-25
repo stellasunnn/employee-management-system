@@ -40,7 +40,7 @@ const OnboardingApplicationSchema: Schema = new Schema({
         expirationDate: Date,
     },
     documents: [{
-        type: { type: String, enum: ["driver_license", "other"], required: true },
+        type: { type: String, enum: ["driver_license", "work_authorization","opt_receipt","other"], required: true },
         fileName: { type: String, required: true },
         fileUrl: { type: String, required: true },
         uploadDate: { type: Date, required: true },

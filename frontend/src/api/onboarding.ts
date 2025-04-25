@@ -8,6 +8,13 @@ const onboardingApi = {
             }
         });
         },
+    uploadDocument: async (formData: FormData) => {
+        return api.post('/onboarding/document', formData, {
+            headers: {
+            'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
   
   saveOnboardingDraft: async (data: any) => {
     return api.post('/onboarding/draft', data);

@@ -22,6 +22,8 @@ export const WorkAuthorizationType = {
 
 export const DocumentType = {
   DriverLicense: 'driver_license',
+  WorkAuthorization: 'work_authorization',
+  OPTReceipt: 'opt_receipt',
   Other: 'other',
 } as const;
 
@@ -115,6 +117,8 @@ export const fullFormSchema = z.object({
     z.object({
       type: z.enum([
         DocumentType.DriverLicense,
+        DocumentType.WorkAuthorization,
+        DocumentType.OPTReceipt,
         DocumentType.Other
       ]),
       fileName: z.string(),
