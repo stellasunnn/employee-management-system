@@ -38,8 +38,6 @@ const WorkAuthorizationType = {
 
 const DocumentType = {
   DriverLicense: 'driver_license',
-  Passport: 'passport',
-  BirthCertificate: 'birth_certificate',
   Other: 'other',
 } as const;
 

@@ -46,7 +46,7 @@ citizenshipStatus?: {
     relationship: string;
   }>;
   documents?: Array<{
-    type: "driver_license" | "passport" | "birth_certificate" | "other";
+    type: "driver_license" |"other";
     fileName: string;
     fileUrl?: string;
     uploadDate?: Date;
@@ -98,7 +98,7 @@ const initialState: OnboardingState = {
     
       citizenshipStatus: {
         isPermanentResident: false,
-        type: "work_authorization", // Default to work authorization
+        type: "work_authorization",
         workAuthorizationType: undefined,
         workAuthorizationOther: '',
         expirationDate: '',
