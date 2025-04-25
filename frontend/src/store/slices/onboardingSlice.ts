@@ -25,7 +25,7 @@ gender: "male" | "female" | "prefer_not_to_say" | undefined;
 citizenshipStatus?: {
     isPermanentResident: boolean;
     type: "green_card" | "citizen" | "work_authorization";
-    workAuthorizationType?: "H1-B" | "H4-EAD" | "L1" | "J1" | "F1" | "other";
+    workAuthorizationType?: "H1-B" | "H4" | "L2" | "F1" | "other";
     workAuthorizationOther?: string;
     expirationDate?: string;
   };

@@ -14,9 +14,8 @@ export const CitizenshipType = {
 
 export const WorkAuthorizationType = {
   H1B: 'H1-B',
-  H4EAD: 'H4-EAD', 
-  L1: 'L1',
-  J1: 'J1',
+  H4: 'H4', 
+  L2: 'L2',
   F1: 'F1',
   Other: 'other',
 } as const;
@@ -74,9 +73,8 @@ export const fullFormSchema = z.object({
     type: z.enum([CitizenshipType.GreenCard, CitizenshipType.Citizen, CitizenshipType.WorkAuthorization]),
     workAuthorizationType: z.enum([
       WorkAuthorizationType.H1B,
-      WorkAuthorizationType.H4EAD,
-      WorkAuthorizationType.L1,
-      WorkAuthorizationType.J1,
+      WorkAuthorizationType.H4,
+      WorkAuthorizationType.L2,
       WorkAuthorizationType.F1,
       WorkAuthorizationType.Other
     ]).optional(),

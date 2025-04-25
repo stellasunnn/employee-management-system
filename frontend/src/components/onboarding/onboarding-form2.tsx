@@ -30,9 +30,8 @@ const CitizenshipType = {
 
 const WorkAuthorizationType = {
   H1B: 'H1-B',
-  H4EAD: 'H4-EAD', 
-  L1: 'L1',
-  J1: 'J1',
+  H4: 'H4', 
+  L2: 'L2',
   F1: 'F1',
   Other: 'other',
 } as const;
@@ -261,9 +260,8 @@ function onSubmit(values: z.infer<typeof pageTwoSchema>) {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={WorkAuthorizationType.H1B}>H1-B</SelectItem>
-                          <SelectItem value={WorkAuthorizationType.H4EAD}>H4-EAD</SelectItem>
-                          <SelectItem value={WorkAuthorizationType.L1}>L1</SelectItem>
-                          <SelectItem value={WorkAuthorizationType.J1}>J1</SelectItem>
+                          <SelectItem value={WorkAuthorizationType.H4}>H4</SelectItem>
+                          <SelectItem value={WorkAuthorizationType.L2}>L2</SelectItem>
                           <SelectItem value={WorkAuthorizationType.F1}>F1 (CPT/OPT)</SelectItem>
                           <SelectItem value={WorkAuthorizationType.Other}>Other</SelectItem>
                         </SelectContent>
