@@ -13,67 +13,15 @@ import {
   selectOnboardingData,
   selectOnboardingStatus,
   selectOnboardingError,
+  setCurrentStep,
+  updateFormData
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
+import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-enum Gender {
-  Male = 'male',
-  Female = 'female',
-  PreferNotToSay = 'prefer_not_to_say',
-}
-
-const formSchema = z.object({
-  firstName: z.string().min(1, {
-    message: 'First name is required.',
-  }),
-  middleName: z.string().optional(),
-  lastName: z.string().min(1, {
-    message: 'Last name is required.',
-  }),
-  preferredName: z.string().optional(),
-
-  //profile picture
-  profilePicture: z.string().optional(),
-
-  //address
-  address: z.object({
-    addressOne: z.string().min(1, {
-      message: 'Address line 1 is required.',
-    }),
-    addressTwo: z.string().min(1, {
-      message: 'Address line 2 is required.',
-    }),
-    city: z.string().min(1, {
-      message: 'City is required.',
-    }),
-    state: z.string().min(1, {
-      message: 'State is required.',
-    }),
-    zipCode: z.string().min(5, {
-      message: 'Valid ZIP code is required.',
-    }),
-  }),
-
-  // Contact Information
-  cellPhone: z.string().regex(/^\d{10}$/, {
-    message: 'Please enter a valid 10-digit phone number.',
-  }),
-  workPhone: z.string().optional(),
-  email: z.string().email({
-    message: 'Please enter a valid email address.',
-  }),
-
-  // identification
-  ssn: z.string().regex(/^\d{9}$/, {
-    message: 'Please enter a valid 9-digit SSN.',
-  }),
-  dateOfBirth: z.string().datetime({
-    message: 'Date of birth is required.',
-  }),
-  gender: z.nativeEnum(Gender, { message: 'Gender is required.' }),
-});
+import { pageOneSchema, pageTwoSchema } from './schema';
+import { Gender } from "./schema"
 
 const defaultAvatarUrl =
   'https://img.freepik.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5464.jpg';
@@ -83,9 +31,10 @@ export default function OnboardingForm() {
   const status = useSelector(selectOnboardingStatus);
   const error = useSelector(selectOnboardingError);
   const [avatarPreview, setAvatarPreview] = useState(defaultAvatarUrl);
+  const navigate = useNavigate();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof pageOneSchema>>({
+    resolver: zodResolver(pageOneSchema),
     defaultValues: {
       firstName: '',
       middleName: '',
@@ -108,8 +57,9 @@ export default function OnboardingForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    dispatch(submitOnboardingForm(values));
+  function onSubmit(values: z.infer<typeof pageOneSchema>) {
+    dispatch(updateFormData(values));
+    dispatch(setCurrentStep(2));
   }
 
   useEffect(() => {
@@ -435,7 +385,7 @@ export default function OnboardingForm() {
           />
 
           <Button type="submit" className="w-full">
-            Submit
+            Next Page
           </Button>
         </form>
       </Form>
