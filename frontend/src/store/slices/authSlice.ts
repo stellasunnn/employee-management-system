@@ -52,7 +52,9 @@ export const login = createAsyncThunk(
     try {
       const data = await loginApi({ username, password });
       localStorage.setItem('token', data.token);
-      return data;
+      // Load user data after successful login
+      const userData = await loadUserApi(data.token);
+      return { token: data.token, user: userData };
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
     }
@@ -106,6 +108,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
+        state.user = action.payload.user;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;

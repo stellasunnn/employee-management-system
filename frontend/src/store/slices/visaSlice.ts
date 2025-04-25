@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
+import visaApi from '../../api/visa';
 
 export type DocumentStatus = 'pending' | 'approved' | 'rejected';
 export type DocumentType = 'opt_receipt' | 'opt_ead' | 'i983' | 'i20';
@@ -28,26 +29,20 @@ export const uploadDocument = createAsyncThunk(
   'visa/uploadDocument',
   async ({ type, file }: { type: DocumentType; file: File }, { rejectWithValue }) => {
     try {
-      // TODO: Implement actual API call
-      // This is a mock implementation
-      return {
-        type,
-        status: 'pending' as DocumentStatus,
-        uploadedAt: new Date().toISOString(),
-      };
+      const response = await visaApi.uploadDocument(type, file);
+      return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to upload document');
+      return rejectWithValue(error.response?.data?.message || 'Failed to upload document');
     }
   },
 );
 
 export const loadVisaDocuments = createAsyncThunk('visa/loadDocuments', async (_, { rejectWithValue }) => {
   try {
-    // TODO: Implement actual API call
-    // This is a mock implementation
-    return [];
+    const response = await visaApi.loadDocuments();
+    return response.data.documents;
   } catch (error: any) {
-    return rejectWithValue(error.message || 'Failed to load documents');
+    return rejectWithValue(error.response?.data?.message || 'Failed to load documents');
   }
 });
 

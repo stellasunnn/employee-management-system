@@ -38,11 +38,19 @@ export const auth = async (
 };
 
 export const authenticateHR = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  // TODO: Implement proper HR authentication
-  // For now, just pass through
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (!req.user.isAdmin) {
+    return res
+      .status(403)
+      .json({ message: "Access denied. HR privileges required" });
+  }
+
   next();
 };

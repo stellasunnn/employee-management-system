@@ -8,7 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '@/store/slices/authSlice';
 import { RootState, AppDispatch } from '@/store/store';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+
 interface LoginFormData {
   username: string;
   password: string;
@@ -22,6 +23,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   } = useForm<LoginFormData>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -33,7 +35,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     const result = await dispatch(login(data));
 
     if (login.fulfilled.match(result)) {
-      navigate('/onboarding');
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     }
   };
 

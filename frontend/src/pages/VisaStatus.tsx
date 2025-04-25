@@ -42,6 +42,7 @@ const VisaStatus = () => {
     if (selectedFile) {
       await dispatch(uploadDocument({ type, file: selectedFile }));
       setSelectedFile(null);
+      await dispatch(loadVisaDocuments());
     }
   };
 

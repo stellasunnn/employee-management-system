@@ -6,8 +6,8 @@ import dotenv from "dotenv";
 // Import routes
 import authRoutes from "./routes/auth.routes";
 import onboardingRoutes from "./routes/onboarding.routes";
-
 import hrRoutes from "./routes/hr.routes";
+import visaRoutes from "./routes/visa.routes";
 
 import { notFound, errorHandler } from "./middleware/error.middleware";
 import connectDB from "./config/db";
@@ -34,6 +34,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/hr", hrRoutes);
+app.use("/api/visa", visaRoutes);
 
 // Error handling middleware
 app.use(notFound);

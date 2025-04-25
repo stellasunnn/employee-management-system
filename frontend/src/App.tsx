@@ -12,6 +12,7 @@ import { loadUser } from './store/slices/authSlice';
 import Navbar from './components/Navbar';
 import { RootState } from './store/store';
 import { Toaster } from 'react-hot-toast';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const AppContent = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -36,10 +37,36 @@ const AppContent = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/visa" element={<VisaStatus />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/hiring-management" element={user?.isAdmin ? <HiringManagement /> : <Navigate to="/" replace />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/visa"
+          element={
+            <ProtectedRoute>
+              <VisaStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hiring-management"
+          element={
+            <ProtectedRoute>{user?.isAdmin ? <HiringManagement /> : <Navigate to="/" replace />}</ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
