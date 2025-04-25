@@ -98,6 +98,8 @@ export default function CitizenshipAndReferencesForm() {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       const formData = new FormData();
+
+      formData.append('fileName', file.name);
       formData.append('file', file);
       formData.append('type', type);
 

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import onboardingApi from '@/api/onboarding';
 import { RootState } from '../store';
 import { error } from 'console';
+import { set } from 'react-hook-form';
 
 interface OnboardingFormData {
   firstName: string;
@@ -59,6 +60,8 @@ interface OnboardingState {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   currentStep: number;
+  applicationStatus: 'NEVER_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  feedback: string;
 }
 
 
@@ -113,6 +116,8 @@ const initialState: OnboardingState = {
   status: 'idle',
   error: null,
   currentStep: 1,
+  applicationStatus: 'NEVER_SUBMITTED',
+  feedback: '',
 };
 
 
@@ -140,10 +145,14 @@ const onboardingSlice = createSlice({
       state.currentStep = action.payload;
     },
 
-    // updateField: (state, action) => {
-    //   const { field, value } = action.payload;
-    //   state.formData[field as keyof OnboardingFormData] = value;
-    // },
+    setApplicationStatus: (state, action: PayloadAction<'NEVER_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED'>) => {
+      state.applicationStatus = action.payload;
+    },
+
+    setFeedback: (state, action: PayloadAction<string>) => {
+      state.feedback = action.payload;
+    },
+
     resetForm: (state) => {
       state.formData = initialState.formData;
       state.status = 'idle';
@@ -158,6 +167,14 @@ const onboardingSlice = createSlice({
       })
       .addCase(submitOnboardingForm.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        if(action.payload.applicationStatus) {
+            state.applicationStatus = action.payload.applicationStatus;
+            if(action.payload.applicationStatus === 'REJECTED' && action.payload.feedback) {
+                state.feedback = action.payload.feedback;
+            }
+        }else{
+            state.applicationStatus = 'PENDING';
+        }
       })
       .addCase(submitOnboardingForm.rejected, (state, action) => {
         state.status = 'failed';
@@ -166,13 +183,14 @@ const onboardingSlice = createSlice({
   },
 });
 
-export const { resetForm, updateFormData, setCurrentStep } = onboardingSlice.actions;
+export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback} = onboardingSlice.actions;
 
 export const selectOnboardingData = (state: RootState) => state.onboarding.formData;
 export const selectOnboardingStatus = (state: RootState) => state.onboarding.status;
 export const selectOnboardingError = (state: RootState) => state.onboarding.error;
 export const selectCurrentStep = (state: RootState) => state.onboarding.currentStep;
-
+export const selectApplicationStatus = (state: RootState) => state.onboarding.applicationStatus;
+export const selectFeedback = (state: RootState) => state.onboarding.feedback;
 
 export default onboardingSlice.reducer;
  

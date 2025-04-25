@@ -4,7 +4,6 @@ import {
   getOnboardingApplication,
   createOnboardingApplication,
   uploadDocument,
-//   getDocument,
   updateApplicationStatus
 } from "../controllers/onboarding.controller";
 import { isAdmin } from "../middleware/admin.middleware";
