@@ -7,6 +7,7 @@ import {
   rejectVisaDocument,
   getInProgressVisaApplications,
   getAllVisaApplications,
+  sendVisaReminder,
 } from "../controllers/visa.controller";
 import upload from "../config/multer.config";
 
@@ -26,5 +27,6 @@ router.get(
   getInProgressVisaApplications
 );
 router.get("/hr/all", auth, authenticateHR, getAllVisaApplications);
+router.post("/hr/:id/remind", auth, authenticateHR, sendVisaReminder);
 
 export default router;

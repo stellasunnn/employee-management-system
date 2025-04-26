@@ -26,12 +26,16 @@ const visaApi = {
     return api.get('/visa/hr/all');
   },
 
-  approveDocument: async (userId: string, documentType: string) => {
-    return api.post(`/visa/hr/approve/${userId}/${documentType}`);
+  approveDocument: async (userId: string) => {
+    return api.post(`/visa/hr/${userId}/approve`);
   },
 
-  rejectDocument: async (userId: string, documentType: string, feedback: string) => {
-    return api.post(`/visa/hr/reject/${userId}/${documentType}`, { feedback });
+  rejectDocument: async (userId: string, feedback: string) => {
+    return api.post(`/visa/hr/${userId}/reject`, { feedback });
+  },
+
+  sendReminder: async (userId: string) => {
+    return api.post(`/visa/hr/${userId}/remind`);
   },
 };
 

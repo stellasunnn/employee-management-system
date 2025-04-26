@@ -8,14 +8,14 @@ import {
   selectVisaError,
   selectVisaCurrentStep,
   selectVisaMessage,
-  DocumentType,
   DocumentStatus,
   Document,
 } from '../store/slices/visaSlice';
+import type { DocumentType } from '../store/slices/visaSlice';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Download } from 'lucide-react';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 const VisaStatusContent = () => {
@@ -40,15 +40,12 @@ const VisaStatusContent = () => {
   const handleUpload = async () => {
     if (selectedFile && currentStep) {
       setUploadingType(currentStep);
-      console.log('currentStep', currentStep);
       try {
         const response = await dispatch(uploadDocument({ type: currentStep, file: selectedFile }));
-        console.log('response', response);
         setSelectedFile(null);
         await dispatch(loadVisaDocuments());
       } finally {
         setUploadingType(null);
-        console.log('finished uploading');
       }
     }
   };
@@ -66,19 +63,26 @@ const VisaStatusContent = () => {
     }
   };
 
-  // Add helper function to check if upload section should be shown
   const shouldShowUploadSection = () => {
     if (!currentStep) return false;
     if (alert === 'All documents have been approved.') return false;
 
     const currentDoc = documents[documents.length - 1];
-    // Show upload section if:
-    // 1. No document exists for current step
-    // 2. Current document is REJECTED (to allow new upload)
-    // 3. Current document is APPROVED (to allow next step upload)
     return (
       !currentDoc || currentDoc.status === DocumentStatus.REJECTED || currentDoc.status === DocumentStatus.APPROVED
     );
+  };
+
+  const handleDownloadTemplate = (templateType: 'empty' | 'sample') => {
+    // Create a blank PDF file URL (you'll need to replace these with actual template URLs)
+    const templateUrl = templateType === 'empty' ? '/templates/I-983-empty.pdf' : '/templates/I-983-sample.pdf';
+
+    const link = document.createElement('a');
+    link.href = templateUrl;
+    link.download = `I-983-${templateType}-template.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -117,7 +121,62 @@ const VisaStatusContent = () => {
                   </div>
                 ))}
 
-                {currentStep && shouldShowUploadSection() && (
+                {currentStep === 'I_983' && shouldShowUploadSection() && (
+                  <div className="border rounded-lg p-4">
+                    <h3 className="text-lg font-medium mb-4">I-983 Form</h3>
+                    <div className="space-y-4">
+                      <div className="flex gap-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDownloadTemplate('empty')}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download Empty Template
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDownloadTemplate('sample')}
+                          className="flex items-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download Sample Template
+                        </Button>
+                      </div>
+                      <div className="border-t pt-4">
+                        <h4 className="text-md font-medium mb-2">Upload Filled Form</h4>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-md file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-primary file:text-white
+                              hover:file:bg-primary/90"
+                            disabled={uploadingType === currentStep}
+                          />
+                          <Button onClick={handleUpload} disabled={!selectedFile || uploadingType === currentStep}>
+                            {uploadingType === currentStep ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {currentStep && currentStep !== 'I_983' && shouldShowUploadSection() && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-medium mb-2">
                       {documents.length > 0 && documents[documents.length - 1].status === DocumentStatus.REJECTED

@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Visa, { DocumentType, DocumentStatus } from "../models/visa.model";
 import { uploadToS3 } from "../utils/s3";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { sendEmail } from "../utils/email";
+import { IUser } from "../types/user.types";
 
 // Get current user's visa status
 export const getVisaStatus = async (req: AuthRequest, res: Response) => {
@@ -9,11 +11,11 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
     const visa = await Visa.findOne({ user: req.user?._id });
 
     if (!visa) {
-    //   return res.status(404).json({ message: "No visa application found" });
-        return res.json({
-          currentStep: "OPT_RECEIPT",
-          message: "No visa application found",
-        });
+      //   return res.status(404).json({ message: "No visa application found" });
+      return res.json({
+        currentStep: "OPT_RECEIPT",
+        message: "No visa application found",
+      });
     }
 
     const currentDocument = visa.documents[visa.documents.length - 1];
@@ -236,13 +238,13 @@ export const getInProgressVisaApplications = async (
         $lookup: {
           from: "users",
           localField: "user",
-          foreignField: "_id", 
-          as: "user"
-        }
+          foreignField: "_id",
+          as: "user",
+        },
       },
       // 5. Unwind the user array created by lookup
       {
-        $unwind: "$user"
+        $unwind: "$user",
       },
       // 6. Project only needed fields
       {
@@ -255,10 +257,10 @@ export const getInProgressVisaApplications = async (
           user: {
             _id: "$user._id",
             username: "$user.username",
-            email: "$user.email"
-          }
-        }
-      }
+            email: "$user.email",
+          },
+        },
+      },
     ]);
 
     res.json(visas);
@@ -274,6 +276,68 @@ export const getAllVisaApplications = async (req: Request, res: Response) => {
     res.json(visas);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Send reminder email to employee about next visa steps
+export const sendVisaReminder = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const visa = await Visa.findById(id).populate<{ user: IUser }>(
+      "user",
+      "email username"
+    );
+
+    if (!visa) {
+      return res.status(404).json({ message: "Visa application not found" });
+    }
+
+    if (!visa.user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const currentDocument = visa.documents[visa.documents.length - 1];
+    let nextStepMessage = "";
+
+    if (!currentDocument) {
+      nextStepMessage = getNextStepMessage(visa.currentStep);
+    } else {
+      switch (currentDocument.status) {
+        case DocumentStatus.PENDING:
+          nextStepMessage = getPendingMessage(visa.currentStep);
+          break;
+        case DocumentStatus.APPROVED:
+          if (currentDocument.type === DocumentType.I_20) {
+            nextStepMessage = "All documents have been approved.";
+          } else {
+            nextStepMessage = getNextStepMessage(visa.currentStep);
+          }
+          break;
+        case DocumentStatus.REJECTED:
+          nextStepMessage = currentDocument.feedback;
+          break;
+      }
+    }
+    console.log("nextStepMessage", nextStepMessage);
+
+    // Send email to employee
+    await sendEmail({
+      to: visa.user.email,
+      subject: "Visa Document Reminder",
+      html: `
+        <h1>Visa Document Reminder</h1>
+        <p>Hello ${visa.user.username},</p>
+        <p>This is a reminder about your visa document status:</p>
+        <p>${nextStepMessage}</p>
+        <p>Please log in to your account to check your visa status and take the necessary actions.</p>
+        <p>Best regards,<br>HR Team</p>
+      `,
+    });
+
+    res.json({ message: "Reminder email sent successfully" });
+  } catch (error) {
+    console.error("Error sending reminder email:", error);
+    res.status(500).json({ message: "Failed to send reminder email" });
   }
 };
 

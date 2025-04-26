@@ -16,7 +16,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
+  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
   token: localStorage.getItem('token'),
   loading: false,
   error: null,
@@ -54,6 +54,7 @@ export const login = createAsyncThunk(
       localStorage.setItem('token', data.token);
       // Load user data after successful login
       const userData = await loadUserApi(data.token);
+      localStorage.setItem('user', JSON.stringify(userData));
       return { token: data.token, user: userData };
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Login failed');
@@ -80,6 +81,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
     clearError: (state) => {
       state.error = null;

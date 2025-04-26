@@ -18,14 +18,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 const AppContent = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
-  useEffect(() => {
-    // Load user on app initialization if token exists
-    const token = localStorage.getItem('token');
-    if (token) {
-      store.dispatch(loadUser());
-    }
-  }, []);
-
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';

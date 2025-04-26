@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '../store/store';
 import {
@@ -8,6 +8,20 @@ import {
   selectVisaDocuments,
   selectVisaError,
   selectVisaMessage,
+  selectVisaLoading,
+  sendReminder,
+  approveDocument,
+  rejectDocument,
+  loadEmployeeVisaData,
+  selectEmployees,
+  selectSearchTerm,
+  selectSelectedStatus,
+  selectActiveTab,
+  selectSearchResults,
+  setSearchTerm,
+  setSelectedStatus,
+  setActiveTab,
+  setSearchResults,
 } from '../store/slices/visaSlice';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -41,105 +55,54 @@ interface EmployeeVisaData {
 
 const HRVisaManagementContent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const [employees, setEmployees] = useState<EmployeeVisaData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<DocumentStatus | 'ALL'>('ALL');
-  const [activeTab, setActiveTab] = useState('in-progress');
-  const [searchResults, setSearchResults] = useState<EmployeeVisaData[]>([]);
+  const employees = useSelector(selectEmployees);
+  const searchTerm = useSelector(selectSearchTerm);
+  const selectedStatus = useSelector(selectSelectedStatus);
+  const activeTab = useSelector(selectActiveTab);
+  const searchResults = useSelector(selectSearchResults);
+  const visaMessage = useSelector(selectVisaMessage);
+  const visaError = useSelector(selectVisaError);
+  const loading = useSelector(selectVisaLoading);
 
   useEffect(() => {
-    loadEmployeeVisaData();
-  }, [activeTab]);
+    dispatch(loadEmployeeVisaData(activeTab));
+    console.log('employees', employees);
+  }, [dispatch, activeTab]);
 
-  const loadEmployeeVisaData = async () => {
+  const handleApprove = async (visaId: string) => {
     try {
-      setLoading(true);
-
-      let response;
-      if (activeTab === 'in-progress') {
-        response = await visaApi.getInprogressVisaApplications();
-      } else {
-        response = await visaApi.getAllEmployeeVisaData();
-      }
-
-      console.log('response', response);
-      const processedData = response.data.map((employee: any) => {
-        const lastDocument = employee.documents[employee.documents.length - 1];
-        const requiresHRApproval = lastDocument?.status === DocumentStatus.PENDING;
-        const pendingDocument = requiresHRApproval ? lastDocument : undefined;
-
-        // Calculate next step based on current document status
-        let nextStep = '';
-        if (!employee.documents.length) {
-          nextStep = 'Submit OPT Receipt';
-        } else if (lastDocument?.status === DocumentStatus.REJECTED) {
-          nextStep = `Resubmit ${lastDocument.type.replace('_', ' ')}`;
-        } else if (lastDocument?.status === DocumentStatus.PENDING) {
-          nextStep = `Waiting for HR approval of ${lastDocument.type.replace('_', ' ')}`;
-        } else if (lastDocument?.status === DocumentStatus.APPROVED) {
-          switch (lastDocument.type) {
-            case 'OPT_RECEIPT':
-              nextStep = 'Submit OPT EAD';
-              break;
-            case 'OPT_EAD':
-              nextStep = 'Submit I-983';
-              break;
-            case 'I_983':
-              nextStep = 'Submit I-20';
-              break;
-            case 'I_20':
-              nextStep = 'All documents approved';
-              break;
-          }
-        }
-
-        return {
-          ...employee,
-          workAuthorization: {
-            title: employee.workAuthorization?.title || 'Not specified',
-            startDate: employee.workAuthorization?.startDate || new Date().toISOString(),
-            endDate: employee.workAuthorization?.endDate || new Date().toISOString(),
-            daysRemaining: employee.workAuthorization?.daysRemaining || 0,
-          },
-          nextStep,
-          requiresHRApproval,
-          pendingDocument,
-        };
-      });
-      console.log('processedData', processedData);
-      setEmployees(processedData);
+      await dispatch(approveDocument(visaId)).unwrap();
+      await dispatch(loadEmployeeVisaData(activeTab));
+      alert(visaMessage || 'Document approved successfully');
     } catch (err) {
-      setError('Failed to load employee visa data');
-      setEmployees([]);
-    } finally {
-      setLoading(false);
+      alert(visaError || 'Failed to approve document');
     }
   };
 
-  const handleApprove = async (userId: string, documentType: DocumentType) => {
+  const handleReject = async (visaId: string, feedback: string) => {
     try {
-      await visaApi.approveDocument(userId, documentType);
-      await loadEmployeeVisaData();
+      await dispatch(rejectDocument({ visaId, feedback })).unwrap();
+      await dispatch(loadEmployeeVisaData(activeTab));
+      alert(visaMessage || 'Document rejected successfully');
     } catch (err) {
-      setError('Failed to approve document');
+      alert(visaError || 'Failed to reject document');
     }
   };
 
-  const handleReject = async (userId: string, documentType: DocumentType, feedback: string) => {
+  const handleSendReminder = async (visaId: string) => {
     try {
-      await visaApi.rejectDocument(userId, documentType, feedback);
-      await loadEmployeeVisaData();
+      console.log('visaId', visaId);
+      await dispatch(sendReminder(visaId)).unwrap();
+      alert(visaMessage || 'Reminder sent successfully');
     } catch (err) {
-      setError('Failed to reject document');
+      alert(visaError || 'Failed to send reminder');
     }
   };
 
   const handleSearch = (value: string) => {
-    setSearchTerm(value);
+    dispatch(setSearchTerm(value));
     if (!value.trim()) {
-      setSearchResults([]);
+      dispatch(setSearchResults([]));
       return;
     }
 
@@ -148,7 +111,7 @@ const HRVisaManagementContent: React.FC = () => {
       const name = employee.user.username.toLowerCase();
       return name.includes(searchLower);
     });
-    setSearchResults(results);
+    dispatch(setSearchResults(results));
   };
 
   const filteredEmployees = employees.filter((employee) => {
@@ -162,9 +125,9 @@ const HRVisaManagementContent: React.FC = () => {
 
   const InProgressView = () => (
     <div className="space-y-6">
-      {error && (
+      {visaError && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{visaError}</AlertDescription>
         </Alert>
       )}
 
@@ -172,10 +135,13 @@ const HRVisaManagementContent: React.FC = () => {
         <Input
           placeholder="Search by employee name..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => dispatch(setSearchTerm(e.target.value))}
           className="max-w-sm"
         />
-        <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as DocumentStatus | 'ALL')}>
+        <Select
+          value={selectedStatus}
+          onValueChange={(value) => dispatch(setSelectedStatus(value as DocumentStatus | 'ALL'))}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -239,7 +205,7 @@ const HRVisaManagementContent: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleApprove(employee.user._id, employee.pendingDocument!.type)}
+                          onClick={() => handleApprove(employee._id)}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve
@@ -250,7 +216,7 @@ const HRVisaManagementContent: React.FC = () => {
                           onClick={() => {
                             const feedback = prompt('Please provide feedback for rejection:');
                             if (feedback) {
-                              handleReject(employee.user._id, employee.pendingDocument!.type, feedback);
+                              handleReject(employee._id, feedback);
                             }
                           }}
                         >
@@ -260,14 +226,7 @@ const HRVisaManagementContent: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // TODO: Implement email notification
-                        alert('Notification sent to employee');
-                      }}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleSendReminder(employee._id)}>
                       Send Notification
                     </Button>
                   )}
@@ -282,9 +241,9 @@ const HRVisaManagementContent: React.FC = () => {
 
   const AllView = () => (
     <div className="space-y-6">
-      {error && (
+      {visaError && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{visaError}</AlertDescription>
         </Alert>
       )}
 
@@ -387,7 +346,7 @@ const HRVisaManagementContent: React.FC = () => {
               <CardTitle>HR Visa Status Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <Tabs value={activeTab} onValueChange={(value) => dispatch(setActiveTab(value as 'in-progress' | 'all'))}>
                 <TabsList className="mb-4">
                   <TabsTrigger value="in-progress">In Progress</TabsTrigger>
                   <TabsTrigger value="all">All</TabsTrigger>
