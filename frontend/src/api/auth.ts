@@ -5,7 +5,6 @@ const API_URL = '/auth'; // Adjust this to your backend URL
 export const login = async ({ username, password }: { username: string; password: string }) => {
   try {
     const response = await api.post(`${API_URL}/login`, { username, password });
-    console.log('response', response);
     return response.data;
   } catch (error) {
     throw error;

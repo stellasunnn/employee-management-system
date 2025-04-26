@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
 import VisaStatus from './pages/VisaStatus';
 import HiringManagement from './pages/HiringManagement';
+import HRVisaManagement from './pages/HRVisaManagement';
 import { useEffect } from 'react';
 import { loadUser } from './store/slices/authSlice';
 import Navbar from './components/Navbar';
@@ -51,6 +52,12 @@ const AppContent = () => {
             <ProtectedRoute>
               <VisaStatus />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/visa-management"
+          element={
+            <ProtectedRoute>{user?.isAdmin ? <HRVisaManagement /> : <Navigate to="/" replace />}</ProtectedRoute>
           }
         />
         <Route

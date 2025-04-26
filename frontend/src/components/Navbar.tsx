@@ -26,7 +26,7 @@ const Navbar = ({ onLogout }: NavbarProps) => {
             Employee Profiles
           </Link>
           <Link
-            to="/visa-status-management"
+            to="/visa-management"
             className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
           >
             Visa Status Management

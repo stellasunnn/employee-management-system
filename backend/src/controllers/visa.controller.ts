@@ -9,7 +9,11 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
     const visa = await Visa.findOne({ user: req.user?._id });
 
     if (!visa) {
-      return res.status(404).json({ message: "No visa application found" });
+    //   return res.status(404).json({ message: "No visa application found" });
+        return res.json({
+          currentStep: "OPT_RECEIPT",
+          message: "No visa application found",
+        });
     }
 
     const currentDocument = visa.documents[visa.documents.length - 1];
@@ -48,9 +52,9 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
 // Upload visa document
 export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+    // if (!req.file) {
+    //   return res.status(400).json({ message: "No file uploaded" });
+    // }
 
     if (!req.user?._id) {
       return res.status(401).json({ message: "User not authenticated" });
@@ -283,7 +287,7 @@ function getNextStepMessage(type: DocumentType): string {
     case DocumentType.OPT_EAD:
       return "Please upload a copy of your OPT EAD";
     case DocumentType.I_983:
-      return "Please upload a copy of the signed I-983";
+      return "“Please download and fill out the I-983 form";
     case DocumentType.I_20:
       return "Please upload a copy of your I-20";
     default:

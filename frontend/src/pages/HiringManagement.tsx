@@ -3,8 +3,8 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import hiringApi from '../api/hiring';
 
 interface Token {
   _id: string;
@@ -29,7 +29,7 @@ const HiringManagement = () => {
 
   const fetchTokenHistory = async () => {
     try {
-      const response = await axios.get('/api/hr/token-history');
+      const response = await hiringApi.getTokenHistory();
       setTokens(response.data);
     } catch (error) {
       toast.error('Failed to fetch token history');
@@ -37,15 +37,13 @@ const HiringManagement = () => {
   };
 
   const handleGenerateToken = async () => {
-    
     if (!email || !name) {
       toast.error('Please provide both email and name');
       return;
     }
-console.log(email, name);
     try {
       setLoading(true);
-      const response = await axios.post('/api/hr/generate-token', { email, name });
+      const response = await hiringApi.generateToken(email, name);
       setNewToken(response.data.token);
       await fetchTokenHistory();
       toast.success('Token generated and email sent successfully');

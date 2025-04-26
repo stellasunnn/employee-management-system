@@ -1,10 +1,11 @@
 import express from "express";
 import { generateToken, getTokenHistory } from "../controllers/hr.controller";
-import { authenticateHR } from "../middleware/auth.middleware";
+import { auth, authenticateHR } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
 // Protect all HR routes with authentication middleware
+router.use(auth);
 router.use(authenticateHR);
 
 // Generate a new registration token
