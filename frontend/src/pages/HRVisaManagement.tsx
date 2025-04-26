@@ -21,8 +21,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import visaApi from '../api/visa';
 
 interface EmployeeVisaData {
-  userId: string;
-  name: string;
+  user: {
+    _id: string;
+    username: string;
+    email: string;
+  };
   documents: Document[];
   currentStep: DocumentType | null;
   workAuthorization: {
@@ -48,12 +51,19 @@ const HRVisaManagementContent: React.FC = () => {
 
   useEffect(() => {
     loadEmployeeVisaData();
-  }, []);
+  }, [activeTab]);
 
   const loadEmployeeVisaData = async () => {
     try {
       setLoading(true);
-      const response = await visaApi.getAllEmployeeVisaData();
+
+      let response;
+      if (activeTab === 'in-progress') {
+        response = await visaApi.getInprogressVisaApplications();
+      } else {
+        response = await visaApi.getAllEmployeeVisaData();
+      }
+
       console.log('response', response);
       const processedData = response.data.map((employee: any) => {
         const lastDocument = employee.documents[employee.documents.length - 1];
@@ -98,6 +108,7 @@ const HRVisaManagementContent: React.FC = () => {
           pendingDocument,
         };
       });
+      console.log('processedData', processedData);
       setEmployees(processedData);
     } catch (err) {
       setError('Failed to load employee visa data');
@@ -134,16 +145,16 @@ const HRVisaManagementContent: React.FC = () => {
 
     const searchLower = value.toLowerCase();
     const results = employees.filter((employee) => {
-      const name = employee.name.toLowerCase();
+      const name = employee.user.username.toLowerCase();
       return name.includes(searchLower);
     });
     setSearchResults(results);
   };
 
   const filteredEmployees = employees.filter((employee) => {
-    if (!employee || !employee.name) return false;
+    if (!employee || !employee.user.username) return false;
 
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = employee.user.username.toLowerCase().includes(searchTerm.toLowerCase());
     if (selectedStatus === 'ALL') return matchesSearch;
 
     return matchesSearch && employee.documents?.some((doc) => doc.status === selectedStatus);
@@ -195,8 +206,8 @@ const HRVisaManagementContent: React.FC = () => {
           </TableHeader>
           <TableBody>
             {filteredEmployees.map((employee) => (
-              <TableRow key={employee.userId}>
-                <TableCell>{employee.name}</TableCell>
+              <TableRow key={employee.user._id}>
+                <TableCell>{employee.user.username}</TableCell>
                 <TableCell>
                   <div className="space-y-1">
                     <div>
@@ -228,7 +239,7 @@ const HRVisaManagementContent: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleApprove(employee.userId, employee.pendingDocument!.type)}
+                          onClick={() => handleApprove(employee.user._id, employee.pendingDocument!.type)}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve
@@ -239,7 +250,7 @@ const HRVisaManagementContent: React.FC = () => {
                           onClick={() => {
                             const feedback = prompt('Please provide feedback for rejection:');
                             if (feedback) {
-                              handleReject(employee.userId, employee.pendingDocument!.type, feedback);
+                              handleReject(employee.user._id, employee.pendingDocument!.type, feedback);
                             }
                           }}
                         >
@@ -313,7 +324,7 @@ const HRVisaManagementContent: React.FC = () => {
           <TableBody>
             {(searchTerm ? searchResults : employees).map((employee, index) => (
               <TableRow key={index}>
-                <TableCell>{employee.name}</TableCell>
+                <TableCell>{employee.user.username}</TableCell>
                 <TableCell>
                   <div className="space-y-1">
                     <div>
@@ -346,7 +357,7 @@ const HRVisaManagementContent: React.FC = () => {
                             onClick={() => {
                               const link = document.createElement('a');
                               link.href = doc.fileUrl;
-                              link.download = `${employee.name}_${doc.type}.pdf`;
+                              link.download = `${employee.user.username}_${doc.type}.pdf`;
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);

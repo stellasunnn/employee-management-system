@@ -231,6 +231,34 @@ export const getInProgressVisaApplications = async (
         },
       },
       // 4. 如果你想带出 user 的 name/email，需要再 $lookup 或用 .populate in Mongoose
+      // 4. Join with users collection to get username and email
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id", 
+          as: "user"
+        }
+      },
+      // 5. Unwind the user array created by lookup
+      {
+        $unwind: "$user"
+      },
+      // 6. Project only needed fields
+      {
+        $project: {
+          _id: 1,
+          currentStep: 1,
+          documents: 1,
+          lastDocument: 1,
+          workAuthorization: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            email: "$user.email"
+          }
+        }
+      }
     ]);
 
     res.json(visas);
@@ -242,7 +270,7 @@ export const getInProgressVisaApplications = async (
 // Get all visa applications for HR
 export const getAllVisaApplications = async (req: Request, res: Response) => {
   try {
-    const visas = await Visa.find().populate("user", "name email");
+    const visas = await Visa.find().populate("user", "username email");
     res.json(visas);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
