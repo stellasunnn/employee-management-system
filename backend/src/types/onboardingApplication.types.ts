@@ -29,6 +29,7 @@ export interface IOnboardingApplication extends Document {
         type: "green_card" | "citizen" | "work_authorization";
         workAuthorizationType?: "H1-B" | "H4" | "L2" | "F1" | "other";
         workAuthorizationOther?: string;
+        startDate: Date,
         expirationDate?: Date;
     };
     documents: [{

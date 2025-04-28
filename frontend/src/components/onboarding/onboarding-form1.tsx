@@ -9,7 +9,6 @@ import { toast } from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   resetForm,
-  submitOnboardingForm,
   selectOnboardingData,
   selectOnboardingStatus,
   selectOnboardingError,

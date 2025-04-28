@@ -37,6 +37,7 @@ const OnboardingApplicationSchema: Schema = new Schema({
         type: { type: String, enum: ["green_card", "citizen", "work_authorization"], required: true },
         workAuthorizationType: { type: String, enum: ["H1-B", "H4-EAD", "L1", "J1", "F1", "other"] },
         workAuthorizationOther: String,
+        startDate: Date,
         expirationDate: Date,
     },
     documents: [{

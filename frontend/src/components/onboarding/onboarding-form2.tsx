@@ -69,6 +69,7 @@ export default function CitizenshipAndReferencesForm() {
         type: undefined,
         workAuthorizationType: undefined,
         workAuthorizationOther: '',
+        startDate: '',
         expirationDate: '',
       },
       reference: formData?.reference || {
@@ -306,6 +307,28 @@ export default function CitizenshipAndReferencesForm() {
                   </div>
                 )}
 
+                <FormField
+                  control={form.control}
+                  name="citizenshipStatus.startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Start Date<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value?.split('T')[0] || ''}
+                          onChange={(e) => {
+                            const value = e.target.value ? `${e.target.value}T00:00:00Z` : '';
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="citizenshipStatus.expirationDate"

@@ -29,6 +29,7 @@ interface OnboardingFormData {
     type: 'green_card' | 'citizen' | 'work_authorization';
     workAuthorizationType?: 'H1-B' | 'H4' | 'L2' | 'F1' | 'other';
     workAuthorizationOther?: string;
+    startDate?: string;
     expirationDate?: string;
   };
   reference?: {
@@ -91,6 +92,7 @@ const initialState: OnboardingState = {
       type: 'work_authorization',
       workAuthorizationType: undefined,
       workAuthorizationOther: '',
+      startDate: '',
       expirationDate: '',
     },
     reference: {

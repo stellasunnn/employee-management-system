@@ -79,6 +79,7 @@ export const fullFormSchema = z.object({
       WorkAuthorizationType.Other
     ]).optional(),
     workAuthorizationOther: z.string().optional(),
+    startDate: z.string().datetime().optional(),
     expirationDate: z.string().datetime().optional(),
   }),
   
