@@ -9,6 +9,7 @@ interface OnboardingFormData {
   middleName?: string;
   lastName: string;
   preferredName?: string;
+  profilePicture?: string;
   address: {
     addressOne: string;
     addressTwo?: string;
@@ -73,6 +74,7 @@ const initialState: OnboardingState = {
     middleName: '',
     lastName: '',
     preferredName: '',
+    profilePicture: '',
     address: {
       addressOne: '',
       addressTwo: '',
