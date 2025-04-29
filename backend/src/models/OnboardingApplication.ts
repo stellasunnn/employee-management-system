@@ -17,7 +17,6 @@ const OnboardingApplicationSchema: Schema = new Schema({
     firstName: { type: String, required: true },
     middleName: String,
     lastName: { type: String, required: true },
-    
     preferredName: String,
     profilePicture: String,
     address: {
@@ -28,6 +27,7 @@ const OnboardingApplicationSchema: Schema = new Schema({
         zipCode: { type: String, required: true },  
     },
     cellPhone: { type: String, required: true },
+    workPhone: String,
     email: { type: String, required: true },
     ssn: { type: String, required: true },
     dateOfBirth: { type: Date, required: true },
@@ -35,11 +35,27 @@ const OnboardingApplicationSchema: Schema = new Schema({
     citizenshipStatus: {
         isPermanentResident: { type: Boolean, required: true },
         type: { type: String, enum: ["green_card", "citizen", "work_authorization"], required: true },
-        workAuthorizationType: { type: String, enum: ["H1-B", "H4", "L2","F1", "other"] },
+        workAuthorizationType: { type: String, enum: ["H1-B", "L2", "F1", "H4", "other"] },
         workAuthorizationOther: String,
         startDate: Date,
         expirationDate: Date,
     },
+    reference: {
+        firstName: { type: String, required: true },
+        lastName: { type: String, required: true },
+        middleName: String,
+        phone: { type: String, required: true },
+        email: { type: String, required: true },
+        relationship: { type: String, required: true }
+      },
+    emergencyContacts: [{
+        firstName: { type: String, required: true },
+        lastName: { type: String, required: true },
+        middleName: String,
+        phone: { type: String, required: true },
+        email: { type: String, required: true },
+        relationship: { type: String, required: true }
+    }],
     documents: [{
         type: { type: String, enum: ["driver_license", "work_authorization","opt_receipt","other"], required: true },
         fileName: { type: String, required: true },

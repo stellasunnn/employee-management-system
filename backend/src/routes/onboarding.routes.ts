@@ -16,6 +16,6 @@ router.post("/application", auth, createOnboardingApplication);
 router.post("/document", auth, uploadDocument);
 
 // Admin routes
-router.patch("/application/:applicationId/status", [auth, isAdmin], updateApplicationStatus);
+router.put("/application/:applicationId/status", auth, isAdmin, updateApplicationStatus);
 
 export default router;

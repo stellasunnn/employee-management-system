@@ -203,7 +203,7 @@ export default function OnboardingForm() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex">
-                      Address line 2 <span className="text-red-500 ml-1">*</span>
+                      Address line 2
                     </FormLabel>
                     <FormControl>
                       <Input {...field} />
