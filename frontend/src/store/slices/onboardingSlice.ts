@@ -85,12 +85,12 @@ export const submitOnboardingForm = createAsyncThunk(
   },
 );
 
-export const checkApplicationStatus = createAsyncThunk('onboarding/checkStatus', async (_, { rejectWithValue }) => {
+export const fetchApplicationData = createAsyncThunk('onboarding/fetchData', async (_, { rejectWithValue }) => {
   try {
-    const response = await onboardingApi.fetchApplicationStatus();
+    const response = await onboardingApi.fetchApplicationData();
     return response.data;
   } catch (error: any) {
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch status');
+    return rejectWithValue(error.response?.data?.message || 'Failed to fetch data');
   }
 });
 
@@ -153,15 +153,16 @@ const onboardingSlice = createSlice({
       })
 
       // Check application status
-      .addCase(checkApplicationStatus.pending, (state) => {
+      .addCase(fetchApplicationData.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(checkApplicationStatus.fulfilled, (state, action) => {
+      .addCase(fetchApplicationData.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.applicationStatus = action.payload.status;
+        state.formData = action.payload;
         state.feedback = action.payload.feedback || '';
       })
-      .addCase(checkApplicationStatus.rejected, (state, action) => {
+      .addCase(fetchApplicationData.rejected, (state, action) => {
         state.status = 'failed';
         state.error = (action.payload as string) || 'Failed to fetch application status';
       })

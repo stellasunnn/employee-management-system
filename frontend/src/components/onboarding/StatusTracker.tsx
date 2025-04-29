@@ -1,4 +1,4 @@
-import {checkApplicationStatus} from '@/store/slices/onboardingSlice';
+import {fetchApplicationData} from '@/store/slices/onboardingSlice';
 import { useEffect } from 'react';
 import { useDispatch} from 'react-redux';
 import { AppDispatch } from '@/store/store';
@@ -8,11 +8,9 @@ const StatusTracker: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
 
     useEffect(()=>{
-        dispatch(checkApplicationStatus());
-
         const interval = setInterval(() => {
-            dispatch(checkApplicationStatus());
-        }, 60000); 
+            dispatch(fetchApplicationData());
+        }, 5000); 
         
         return () => clearInterval(interval);
     }, [dispatch]);

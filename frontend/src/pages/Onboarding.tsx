@@ -10,7 +10,8 @@ import {
   selectCurrentStep, 
   selectApplicationStatus, 
   selectFeedback,
-  checkApplicationStatus,
+  selectOnboardingStatus,
+  fetchApplicationData
 } from '@/store/slices/onboardingSlice';
 import { AppDispatch } from '@/store/store';
 
@@ -20,13 +21,16 @@ const Onboarding = () => {
   const dispatch = useDispatch<AppDispatch>();
   const currentStep = useSelector(selectCurrentStep);
   const applicationStatus = useSelector(selectApplicationStatus);
+  const onboardingStatus = useSelector(selectOnboardingStatus)
   const feedback = useSelector(selectFeedback);
   
   // Check status on initial load
   useEffect(() => {
-    dispatch(checkApplicationStatus());
-  }, [dispatch]);
-  
+    if(onboardingStatus === 'idle') {
+      dispatch(fetchApplicationData());
+    }
+  }, [dispatch, onboardingStatus]);
+
   // First, check application status
   if (applicationStatus === ApplicationStatus.Pending) {
     return (

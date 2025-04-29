@@ -2,7 +2,7 @@ import mongoose, { Document } from "mongoose";
 
 export interface IOnboardingApplication extends Document {
     userId: mongoose.Types.ObjectId;
-    status: "pending" | "approved" | "rejected";
+    status: "pending" | "approved" | "rejected"| "never_submitted";
     rejectionFeedback?: string;
     firstName: string;
     lastName: string;

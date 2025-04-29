@@ -5,7 +5,6 @@ import { OnboardingApplication } from "../models/OnboardingApplication";
 // Get onboarding application by user id
 export const getOnboardingApplication = async (req: AuthRequest, res: Response) => {
     try {
-        const { userId } = req.params;
         const application = await OnboardingApplication.findOne({ userId: req.user?.id });
         if (!application) {
             return res.status(404).json({ message: "Onboarding application not found" });
@@ -15,6 +14,19 @@ export const getOnboardingApplication = async (req: AuthRequest, res: Response) 
         res.status(500).json({ message: "Error fetching onboarding application" });
     }
 }
+
+export const getOnboardingApplicationStatus = async (req: AuthRequest, res: Response) => {
+  try {
+      const application = await OnboardingApplication.findOne({ userId: req.user?.id });
+      if (!application) {
+          return res.status(404).json({ message: "Onboarding application status not found" });
+      }
+      res.status(200).json({status: application.status});
+  } catch (error) {
+      res.status(500).json({ message: "Error fetching onboarding application status" });
+  }
+}
+
 
 // Create onboarding application    
 export const createOnboardingApplication = async (req: AuthRequest, res: Response) => {

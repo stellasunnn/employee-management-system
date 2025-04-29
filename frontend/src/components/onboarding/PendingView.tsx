@@ -12,7 +12,7 @@ const PendingView: React.FC = () => {
       {/* Status Banner */}
       <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
         <p className="font-bold">Application Under Review</p>
-        <p>Your application has been submitted and is currently being reviewed by our team.</p>
+        <p>Please wait for HR to review your application.</p>
       </div>
       
       {/* Personal Information */}

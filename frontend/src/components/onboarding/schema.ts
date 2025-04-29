@@ -13,10 +13,10 @@ export enum CitizenshipType {
 }
 
 export enum ApplicationStatus {
-  NeverSubmitted = 'NEVER_SUBMITTED',
-  Pending = 'PENDING',
-  Rejected = 'REJECTED',
-  Approved = 'APPROVED'
+  NeverSubmitted = 'never_submitted',
+  Pending = 'pending',
+  Rejected = 'rejected',
+  Approved = 'approved'
 }
 
 export const WorkAuthorizationType = {
