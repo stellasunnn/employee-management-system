@@ -173,7 +173,7 @@ export const fullFormSchema = z.object({
       ]),
       fileName: z.string(),
       fileUrl: z.string().optional(),
-      uploadDate: z.date().optional(),
+      uploadDate: z.string().optional(),
     })
   ).optional(),
 });

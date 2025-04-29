@@ -13,8 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.796.0",
-    "@aws-sdk/s3-request-presigner": "^3.796.0",
+    "@aws-sdk/client-s3": "^3.799.0",
+    "@aws-sdk/s3-request-presigner": "^3.799.0",
     "@emailjs/nodejs": "^5.0.2",
     "@types/nodemailer": "^6.4.17",
     "bcryptjs": "^2.4.3",

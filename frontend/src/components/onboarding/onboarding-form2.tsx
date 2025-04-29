@@ -96,21 +96,26 @@ export default function OnboardingFormTwo({
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       const formData = new FormData();
-
-      formData.append('fileName', file.name);
       formData.append('file', file);
-      formData.append('type', type);
 
-      dispatch(uploadDocument(formData))
-        .unwrap()
-        .then((response) => {
+      // Use the new file upload endpoint
+      fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
           const currentDocuments = form.getValues().documents || [];
 
           const newDocument = {
             type: type,
-            fileName: file.name,
-            fileUrl: response.url,
-            uploadDate: new Date(),
+            fileName: data.fileName,
+            fileUrl: data.fileUrl,
+            // Convert Date to ISO string for Redux
+            uploadDate: data.uploadDate ? new Date(data.uploadDate).toISOString() : new Date().toISOString(),
           };
 
           dispatch(
@@ -118,10 +123,46 @@ export default function OnboardingFormTwo({
               documents: [...currentDocuments, newDocument],
             }),
           );
+
+          // Update document preview
+          setDocumentPreviews(prev => ({
+            ...prev,
+            [type]: data.fileName
+          }));
+
+          toast.success('File uploaded successfully');
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('Upload failed:', error);
+          toast.error('Failed to upload file');
         });
+    }
+  };
+
+  // Handle file download
+  const handleFileDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      // If the URL is not a pre-signed URL, get a new one
+      if (!fileUrl.startsWith('https://')) {
+        const filename = fileUrl.split('/').pop();
+        const response = await fetch(`/api/files/download/${filename}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        fileUrl = data.url;
+      }
+
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download file');
     }
   };
 
