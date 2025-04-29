@@ -22,26 +22,6 @@ import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { pageTwoSchema } from './schema';
 import { CitizenshipType, WorkAuthorizationType, DocumentType } from '@/components/onboarding/schema';
-// const CitizenshipType = {
-//   GreenCard: 'green_card',
-//   Citizen: 'citizen',
-//   WorkAuthorization: 'work_authorization',
-// } as const;
-
-// const WorkAuthorizationType = {
-//   H1B: 'H1-B',
-//   H4: 'H4',
-//   L2: 'L2',
-//   F1: 'F1',
-//   Other: 'other',
-// } as const;
-
-// const DocumentType = {
-//   DriverLicense: 'driver_license',
-//   WorkAuthorization: 'work_authorization',
-//   OptReceipt: 'opt_receipt',
-//   Other: 'other',
-// } as const;
 
 type DocumentTypeValues = (typeof DocumentType)[keyof typeof DocumentType];
 

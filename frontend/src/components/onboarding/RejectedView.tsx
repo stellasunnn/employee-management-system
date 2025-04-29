@@ -1,4 +1,3 @@
-// src/components/onboarding/RejectedView.tsx
 import { useSelector } from 'react-redux';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 // import { selectOnboardingData, OnboardingFormData } from '../../store/slices/onboardingSlice';

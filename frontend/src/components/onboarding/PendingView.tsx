@@ -1,4 +1,3 @@
-// src/components/onboarding/PendingView.tsx
 import { useSelector } from 'react-redux';
 import { selectOnboardingData, selectDocuments} from '../../store/slices/onboardingSlice';
 
