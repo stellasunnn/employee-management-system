@@ -56,9 +56,9 @@ const Onboarding = () => {
   
       <div className="w-full">
         {currentStep === 1 ? (
-          <OnboardingForm1 />
+          <OnboardingForm1 isResubmission = {applicationStatus=== ApplicationStatus.Rejected} />
         ) : (
-          <OnboardingForm2 /> 
+          <OnboardingForm2 isResubmission = {applicationStatus=== ApplicationStatus.Rejected} /> 
         )}
       </div>
     </div>

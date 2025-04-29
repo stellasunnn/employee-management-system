@@ -147,7 +147,7 @@ const onboardingSlice = createSlice({
         state.requestFromHomeState = 'submit_complete'
         if (action.payload.applicationStatus) {
           state.applicationStatus = action.payload.applicationStatus;
-          if (action.payload.applicationStatus === 'REJECTED' && action.payload.feedback) {
+          if (action.payload.applicationStatus === ApplicationStatus && action.payload.feedback) {
             state.feedback = action.payload.feedback;
           }
         } else {

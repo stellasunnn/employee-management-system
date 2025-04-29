@@ -15,7 +15,7 @@ import {
   selectDocuments,
   fetchApplicationData,
   setRequestFromHomeState,
-  selectRequestFromHomeState
+  selectRequestFromHomeState,
 } from '@/store/slices/onboardingSlice';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
@@ -40,15 +40,15 @@ const Home = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchApplicationData())
-  }, [dispatch, applicationStatus])
+    dispatch(fetchApplicationData());
+  }, [dispatch, applicationStatus]);
 
   useEffect(() => {
-    if(requestFromHomeState === 'submit_complete'){
+    if (requestFromHomeState === 'submit_complete') {
       setEditMode(false);
-      dispatch(setRequestFromHomeState('home'))
+      dispatch(setRequestFromHomeState('home'));
     }
-  }, [dispatch, requestFromHomeState, setRequestFromHomeState, setEditMode])
+  }, [dispatch, requestFromHomeState, setRequestFromHomeState, setEditMode]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -68,7 +68,7 @@ const Home = () => {
   }
 
   const handleSave = () => {
-    dispatch(setRequestFromHomeState('submit_request_one'))
+    dispatch(setRequestFromHomeState('submit_request_one'));
   };
 
   const handleCancel = () => {
@@ -108,7 +108,9 @@ const Home = () => {
               <div className="flex justify-between mb-6">
                 <h1 className="text-2xl font-bold">Personal Information</h1>
                 {!editMode ? (
-                  <Button className="text-sm" onClick={() => setEditMode(true)}>Edit information</Button>
+                  <Button className="text-sm" onClick={() => setEditMode(true)}>
+                    Edit information
+                  </Button>
                 ) : (
                   <div className="space-x-2">
                     <Button variant="outline" onClick={handleCancel}>
@@ -121,9 +123,8 @@ const Home = () => {
               {/* edit mode */}
               {editMode ? (
                 <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
-                  <OnboardingFormOne initialData={formData} isResubmission={false} isEditMode={true}/>
-                  <OnboardingFormTwo initialData={formData} isResubmission={false} isEditMode={true}/>
-                  
+                  <OnboardingFormOne initialData={formData} isResubmission={false} isEditMode={true} />
+                  <OnboardingFormTwo initialData={formData} isResubmission={false} isEditMode={true} />
                 </div>
               ) : (
                 <div className="space-y-6">

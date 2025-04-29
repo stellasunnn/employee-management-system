@@ -20,7 +20,8 @@ import {
   selectCurrentStep,
   setCurrentStep,
   setRequestFromHomeState,
-  selectRequestFromHomeState
+  selectRequestFromHomeState,
+  resubmitApplication
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
@@ -184,9 +185,12 @@ export default function OnboardingFormTwo({
     const completeData = {
       ...formData, 
       ...values, 
+      status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus
     };
 
     console.log('Submitting combined data:', completeData);
+    console.log(isResubmission)
+
     dispatch(submitOnboardingForm(completeData));
   }
 

@@ -51,7 +51,7 @@ export const createOnboardingApplication = async (req: AuthRequest, res: Respons
               const applicationData = {
                   ...requestData,
                   userId: userId,
-                  status: existingApplication.status // Preserve the existing status
+                  status: requestData.status ? requestData.status : existingApplication.status // Preserve the existing status if not sent
               };
               
               // Use replaceOne to completely replace the document except for _id

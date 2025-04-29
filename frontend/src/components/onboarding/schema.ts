@@ -103,33 +103,33 @@ export const fullFormSchema = z.object({
       WorkAuthorizationType.Other
     ]).optional(),
     workAuthorizationOther: z.string().optional(),
-    startDate: z.string()
-  .datetime({
-    message: 'Start date must be a valid date.',
-  })
-  .refine((date) => {
-    if (!date) return true; // Skip validation if not provided
-    const parsedDate = new Date(date);
-    const today = new Date();
-    return parsedDate <= today;
-  }, {
-    message: 'Start date cannot be in the future.',
-  })
-  .optional(),
-
-  expirationDate: z.string()
-  .datetime({
-    message: 'Expiration date must be a valid date.',
-  })
-  .refine((date) => {
-    if (!date) return true; // Skip validation if not provided
-    const parsedDate = new Date(date);
-    const today = new Date();
-    return parsedDate >= today;
-  }, {
-    message: 'Expiration date cannot be in the past.',
-  })
-  .optional(),
+    startDate: z.union([
+      z.string().datetime({ message: 'Start date must be a valid date.' }),
+      z.literal('')
+    ]),
+    expirationDate: z.union([
+      z.string().datetime({ message: 'Expiration date must be a valid date.' }),
+      z.literal('')
+    ])
+  }).superRefine((data, ctx) => {
+    console.log(data.isPermanentResident)
+    if (!data.isPermanentResident) {
+      if (!data.startDate || data.startDate === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Start date is required for non permanent residents',
+          path: ['startDate']
+        });
+      }
+      
+      if (!data.expirationDate || data.expirationDate === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Expiration date is required for non permanent residents',
+          path: ['expirationDate']
+        });
+      }
+    }
   }),
   
   // Reference information
@@ -204,6 +204,8 @@ export const pageTwoSchema = fullFormSchema.pick({
   reference:true,
   emergencyContacts: true
 });
+
+
 
 export type pageOneValues = z.infer<typeof pageOneSchema>;
 
