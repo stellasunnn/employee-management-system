@@ -15,8 +15,8 @@ import {
   updateFormData,
   selectApplicationStatus,
   selectCurrentStep,
-  setRequestSubmitFromHome,
-  selectRequestSubmitFromHome
+  setRequestFromHomeState,
+  selectRequestFromHomeState
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '@/store/store';
@@ -48,7 +48,7 @@ export default function OnboardingForm({
   const [avatarPreview, setAvatarPreview] = useState(initialData?.profilePicture || defaultAvatarUrl);
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const currentStep = useSelector(selectCurrentStep);
-  const requestSubmitFromHome = useSelector(selectRequestSubmitFromHome)
+  const requestFromHomeState = useSelector(selectRequestFromHomeState)
 
   const form = useForm<z.infer<typeof pageOneSchema>>({
     resolver: zodResolver(pageOneSchema),
@@ -67,15 +67,8 @@ export default function OnboardingForm({
     }
   }, [user]);
 
-  useEffect(() => {
-    if(requestSubmitFromHome && isEditMode){
-      console.log("Submitting form 1")
-      form.handleSubmit((onSubmit))();
-      dispatch(setRequestSubmitFromHome(false))
-    }
-  },[requestSubmitFromHome, dispatch, form, isEditMode])
-
   function onSubmit(values: z.infer<typeof pageOneSchema>) {
+    console.log("Dispatching updateFormData: ", values)
     dispatch(updateFormData(values));
     if (isResubmission) {
       toast.success('Form updated successfully!');
@@ -83,7 +76,16 @@ export default function OnboardingForm({
     if (!isEditMode) {
       dispatch(setCurrentStep(2));
     }
+    dispatch(setRequestFromHomeState('submit_request_two'))
   }
+
+  useEffect(() => {
+    if(requestFromHomeState === 'submit_request_one' && isEditMode){
+      console.log("Submitting form 1")
+      form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))();
+    }
+  }, [requestFromHomeState, dispatch, form, isEditMode])
+
 
   useEffect(() => {
     if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
@@ -96,7 +98,7 @@ export default function OnboardingForm({
       {!isEditMode && <h2 className="text-xl font-bold mb-4">Onboarding Form</h2>}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))} className="space-y-6">
           {/* name */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
             <FormField

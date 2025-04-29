@@ -14,7 +14,8 @@ import {
   selectApplicationStatus,
   selectDocuments,
   fetchApplicationData,
-  setRequestSubmitFromHome
+  setRequestFromHomeState,
+  selectRequestFromHomeState
 } from '@/store/slices/onboardingSlice';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
@@ -28,6 +29,7 @@ const Home = () => {
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const applicationStatus = useSelector(selectApplicationStatus);
   const onboardingStatus = useSelector(selectOnboardingStatus);
+  const requestFromHomeState = useSelector(selectRequestFromHomeState);
   const formData = useSelector(selectOnboardingData);
   const documents = useSelector(selectDocuments) || [];
   const [editMode, setEditMode] = useState(false);
@@ -40,6 +42,13 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchApplicationData())
   }, [dispatch, applicationStatus])
+
+  useEffect(() => {
+    if(requestFromHomeState === 'submit_complete'){
+      setEditMode(false);
+      dispatch(setRequestFromHomeState('home'))
+    }
+  }, [dispatch, requestFromHomeState, setRequestFromHomeState, setEditMode])
 
   const handleLogout = () => {
     dispatch(logout());
@@ -59,7 +68,7 @@ const Home = () => {
   }
 
   const handleSave = () => {
-    dispatch(setRequestSubmitFromHome(true))
+    dispatch(setRequestFromHomeState('submit_request_one'))
   };
 
   const handleCancel = () => {

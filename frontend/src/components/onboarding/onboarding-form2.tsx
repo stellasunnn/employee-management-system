@@ -19,8 +19,8 @@ import {
   selectApplicationStatus,
   selectCurrentStep,
   setCurrentStep,
-  setRequestSubmitFromHome,
-  selectRequestSubmitFromHome
+  setRequestFromHomeState,
+  selectRequestFromHomeState
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
@@ -57,7 +57,7 @@ export default function OnboardingFormTwo({
 
   const [documents, setDocuments] = useState<File[]>([]);
   const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
-  const requestSubmitFromHome = useSelector(selectRequestSubmitFromHome)
+  const requestFromHomeState = useSelector(selectRequestFromHomeState)
 
 
   const form = useForm<z.infer<typeof pageTwoSchema>>({
@@ -71,24 +71,8 @@ export default function OnboardingFormTwo({
         startDate: '',
         expirationDate: '',
       },
-      reference: dataToUse?.reference || {
-        firstName: '',
-        middleName: '',
-        lastName: '',
-        phone: '',
-        email: '',
-        relationship: '',
-      },
-      emergencyContacts: dataToUse?.emergencyContacts || [
-        {
-          firstName: '',
-          middleName: '',
-          lastName: '',
-          phone: '',
-          email: '',
-          relationship: '',
-        },
-      ],
+      reference: dataToUse?.reference || undefined,
+      emergencyContacts: dataToUse?.emergencyContacts || undefined,
       documents: dataToUse?.documents || [],
     },
   });
@@ -100,12 +84,12 @@ export default function OnboardingFormTwo({
   }, [formData, form.reset, currentStep]);
 
   useEffect(() => {
-    if(requestSubmitFromHome && isEditMode){
+    if(requestFromHomeState === 'submit_request_two' && isEditMode){
       console.log("Submitting form 2")
-      form.handleSubmit((onSubmit))();
-      dispatch(setRequestSubmitFromHome(false))
+      form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))();
+      dispatch(setRequestFromHomeState('submit_received'))
     }
-  }, [requestSubmitFromHome, dispatch, form, isEditMode])
+  }, [requestFromHomeState, dispatch, form, isEditMode])
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
@@ -177,7 +161,7 @@ export default function OnboardingFormTwo({
       <h2 className="text-xl font-bold mb-4">Citizenship & References</h2>}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))} className="space-y-6">
           {/* Citizenship Status */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Citizenship Status</h3>
@@ -497,7 +481,7 @@ export default function OnboardingFormTwo({
           <div className="flex items-center space-x-2 mt-6">
             <Checkbox
               id="includeEmergencyContact"
-              checked={!!form.watch('emergencyContacts')}
+              checked={!!form.watch('emergencyContacts') && form.watch('emergencyContacts')?.length !== 0}
               onCheckedChange={(checked) => {
                 if (checked) {
                   form.setValue('emergencyContacts', [

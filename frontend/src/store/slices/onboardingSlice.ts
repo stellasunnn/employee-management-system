@@ -16,7 +16,7 @@ interface OnboardingState {
   currentStep: number;
   applicationStatus: ApplicationStatus;
   feedback: string;
-  requestSubmitFromHome: boolean;
+  requestFromHomeState: 'submit_complete' | 'submit_received' | 'home' | 'submit_request_one' | 'submit_request_two';
 }
 
 // Initial state
@@ -73,7 +73,7 @@ const initialState: OnboardingState = {
   currentStep: 1,
   applicationStatus: ApplicationStatus.NeverSubmitted,
   feedback: '',
-  requestSubmitFromHome: false,
+  requestFromHomeState: 'home',
 };
 
 export const submitOnboardingForm = createAsyncThunk(
@@ -125,8 +125,8 @@ const onboardingSlice = createSlice({
     setFeedback: (state, action: PayloadAction<string>) => {
       state.feedback = action.payload;
     },
-    setRequestSubmitFromHome: (state, action: PayloadAction<boolean>) => {
-      state.requestSubmitFromHome = action.payload;
+    setRequestFromHomeState: (state, action: PayloadAction<'submit_complete' | 'submit_received' | 'home' | 'submit_request_one' | 'submit_request_two'>) => {
+      state.requestFromHomeState = action.payload;
     },
 
     resetForm: (state) => {
@@ -144,6 +144,7 @@ const onboardingSlice = createSlice({
       })
       .addCase(submitOnboardingForm.fulfilled, (state, action) => {
         state.status = 'succeeded';
+        state.requestFromHomeState = 'submit_complete'
         if (action.payload.applicationStatus) {
           state.applicationStatus = action.payload.applicationStatus;
           if (action.payload.applicationStatus === 'REJECTED' && action.payload.feedback) {
@@ -189,7 +190,7 @@ const onboardingSlice = createSlice({
   },
 });
 
-export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback, setRequestSubmitFromHome } = onboardingSlice.actions;
+export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback, setRequestFromHomeState } = onboardingSlice.actions;
 
 export const selectOnboardingData = (state: RootState) => state.onboarding.formData;
 export const selectOnboardingStatus = (state: RootState) => state.onboarding.status;
@@ -198,5 +199,5 @@ export const selectCurrentStep = (state: RootState) => state.onboarding.currentS
 export const selectApplicationStatus = (state: RootState) => state.onboarding.applicationStatus;
 export const selectFeedback = (state: RootState) => state.onboarding.feedback;
 export const selectDocuments = (state: RootState) => state.onboarding.formData.documents;
-export const selectRequestSubmitFromHome = (state: RootState) => state.onboarding.requestSubmitFromHome
+export const selectRequestFromHomeState = (state: RootState) => state.onboarding.requestFromHomeState
 export default onboardingSlice.reducer;

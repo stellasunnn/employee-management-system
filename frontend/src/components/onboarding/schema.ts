@@ -160,7 +160,7 @@ export const fullFormSchema = z.object({
       }),
       relationship: z.string().min(1, { message: 'Relationship is required.' }),
     })
-  ).min(1, { message: 'At least one emergency contact is required.' }).optional(),
+  ).optional(),
   
   // Documents
   documents: z.array(

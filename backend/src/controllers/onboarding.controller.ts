@@ -28,28 +28,56 @@ export const getOnboardingApplicationStatus = async (req: AuthRequest, res: Resp
 }
 
 
-// Create onboarding application    
+// Create or replace onboarding application
 export const createOnboardingApplication = async (req: AuthRequest, res: Response) => {
-    try {
-        const applicationData = {
-            ...req.body,
-            userId: req.user?.id,
-            status: "pending"
-        }
-
-        let application = await OnboardingApplication.findOne({ userId: req.user?.id, status: "pending" });
-        
-        if (application) {
-            return res.status(400).json({ message: "Application already exists" });
-        } else {
-            application = new OnboardingApplication(applicationData);
-            await application.save();
-            res.status(201).json(application);
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Error creating onboarding application" });
-    }
+  try {
+      const userId = req.user?.id;
+      
+      // Remove _id if present to avoid duplicate key errors
+      const requestData = { ...req.body };
+      if (requestData._id) {
+          delete requestData._id;
+      }
+      
+      // Find any existing application for this user
+      const existingApplication = await OnboardingApplication.findOne({ userId: userId });
+      
+      if (existingApplication) {
+          if (existingApplication.status === "pending") {
+              // Don't replace pending applications
+              return res.status(400).json({ message: "Application already exists" });
+          } else {
+              // Replace non-pending applications while preserving _id and status
+              const applicationData = {
+                  ...requestData,
+                  userId: userId,
+                  status: existingApplication.status // Preserve the existing status
+              };
+              
+              // Use replaceOne to completely replace the document except for _id
+              await OnboardingApplication.replaceOne(
+                  { _id: existingApplication._id },
+                  applicationData
+              );
+              
+              // Fetch the replaced document to return
+              const replacedApplication = await OnboardingApplication.findById(existingApplication._id);
+              return res.status(200).json(replacedApplication);
+          }
+      } else {
+          // Create new application if none exists, with pending status
+          const newApplication = new OnboardingApplication({
+              ...requestData,
+              userId: userId,
+              status: "pending" // Only set pending status for new applications
+          });
+          await newApplication.save();
+          return res.status(201).json(newApplication);
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error creating onboarding application" });
+  }
 }
 
 export const uploadDocument = async (req: AuthRequest, res: Response) => {
