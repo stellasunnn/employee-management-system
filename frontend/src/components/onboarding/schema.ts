@@ -67,8 +67,25 @@ export const fullFormSchema = z.object({
   ssn: z.string().regex(/^\d{9}$/, {
     message: 'Please enter a valid 9-digit SSN.',
   }),
-  dateOfBirth: z.string().datetime({
-    message: 'Date of birth is required.',
+  dateOfBirth: z.string()
+  .datetime({
+    message: 'Date of birth must be a valid date.',
+  })
+  .refine((date) => {
+    const parsedDate = new Date(date);
+    const today = new Date();
+    return parsedDate <= today;
+  }, {
+    message: 'Date of birth cannot be in the future.',
+  })
+  .refine((date) => {
+    const parsedDate = new Date(date);
+    const today = new Date();
+    const minDate = new Date();
+    minDate.setFullYear(today.getFullYear() - 120); // Reasonable max age of 120 years
+    return parsedDate >= minDate;
+  }, {
+    message: 'Date of birth is not within a valid range.',
   }),
   gender: z.enum([Gender.Male, Gender.Female, Gender.PreferNotToSay], {
     message: 'Gender is required.',
@@ -86,8 +103,33 @@ export const fullFormSchema = z.object({
       WorkAuthorizationType.Other
     ]).optional(),
     workAuthorizationOther: z.string().optional(),
-    startDate: z.string().datetime().optional(),
-    expirationDate: z.string().datetime().optional(),
+    startDate: z.string()
+  .datetime({
+    message: 'Start date must be a valid date.',
+  })
+  .refine((date) => {
+    if (!date) return true; // Skip validation if not provided
+    const parsedDate = new Date(date);
+    const today = new Date();
+    return parsedDate <= today;
+  }, {
+    message: 'Start date cannot be in the future.',
+  })
+  .optional(),
+
+  expirationDate: z.string()
+  .datetime({
+    message: 'Expiration date must be a valid date.',
+  })
+  .refine((date) => {
+    if (!date) return true; // Skip validation if not provided
+    const parsedDate = new Date(date);
+    const today = new Date();
+    return parsedDate >= today;
+  }, {
+    message: 'Expiration date cannot be in the past.',
+  })
+  .optional(),
   }),
   
   // Reference information
@@ -158,6 +200,9 @@ export const pageTwoSchema = fullFormSchema.pick({
   reference: true,
   emergencyContacts: true,
   documents: true,
+}).partial({
+  reference:true,
+  emergencyContacts: true
 });
 
 export type pageOneValues = z.infer<typeof pageOneSchema>;

@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import {
   updateFormData,
   selectApplicationStatus,
   selectCurrentStep,
-  setCurrentStep
+  setCurrentStep,
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
@@ -34,7 +35,7 @@ export default function CitizenshipAndReferencesForm() {
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
   const error = useSelector(selectOnboardingError);
-  const applicationStatus = useSelector(selectApplicationStatus)
+  const applicationStatus = useSelector(selectApplicationStatus);
   const currentStep = useSelector(selectCurrentStep);
 
   const [isPermanentResident, setIsPermanentResident] = useState(
@@ -80,10 +81,10 @@ export default function CitizenshipAndReferencesForm() {
   });
 
   useEffect(() => {
-    if(formData && currentStep === 2){
-      form.reset(formData)
+    if (formData && currentStep === 2) {
+      form.reset(formData);
     }
-  }, [formData, form.reset, currentStep])
+  }, [formData, form.reset, currentStep]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
@@ -148,9 +149,9 @@ export default function CitizenshipAndReferencesForm() {
   useEffect(() => {
     if (status === 'succeeded') {
       toast.success('Form submitted successfully!');
-    } else if (status === 'failed' && (applicationStatus !== ApplicationStatus.NeverSubmitted) && error) {
-          toast.error(error);
-        }
+    } else if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
+      toast.error(error);
+    }
   }, [status, error, navigate]);
 
   return (
@@ -345,111 +346,155 @@ export default function CitizenshipAndReferencesForm() {
             )}
           </div>
 
-          {/* Reference Information */}
-          <div className="space-y-4 mt-8">
-            <h3 className="text-lg font-semibold">Reference Information</h3>
-            <FormField
-              control={form.control}
-              name="reference.firstName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex">
-                    First Name<span className="text-red-500 ml-1">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="reference.middleName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Middle Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 mt-10">
+              <Checkbox
+                id="includeReference"
+                checked={!!form.watch('reference')}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    form.setValue('reference', {
+                      firstName: '',
+                      middleName: '',
+                      lastName: '',
+                      phone: '',
+                      email: '',
+                      relationship: '',
+                    });
+                  } else {
+                    form.setValue('reference', undefined);
+                  }
+                }}
               />
-
-              <FormField
-                control={form.control}
-                name="reference.lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex">
-                      Last Name<span className="text-red-500 ml-1">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <label htmlFor="includeReference" className="text-lg font-semibold">
+                Add Reference Information
+              </label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="reference.phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex">
-                      Phone<span className="text-red-500 ml-1">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Reference Information */}
+            {form.watch('reference') && (
+              <div className="space-y-4 mt-8">
+                <FormField
+                  control={form.control}
+                  name="reference.firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        First Name<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="reference.email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex">
-                      Email<span className="text-red-500 ml-1">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="reference.middleName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Middle Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="reference.relationship"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex">
-                    Relationship<span className="text-red-500 ml-1">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="reference.lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex">
+                          Last Name<span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="reference.phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex">
+                          Phone<span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="reference.email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex">
+                          Email<span className="text-red-500 ml-1">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="reference.relationship"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Relationship<span className="text-red-500 ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
           </div>
 
           {/* Emergency Contact */}
-          <div className="space-y-4 mt-8">
-            <h3 className="text-lg font-semibold">Emergency Contact</h3>
 
+          <div className="flex items-center space-x-2 mt-6">
+            <Checkbox
+              id="includeEmergencyContact"
+              checked={!!form.watch('emergencyContacts')}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  form.setValue('emergencyContacts', [
+                    { firstName: '', middleName: '', lastName: '', phone: '', email: '', relationship: '' },
+                  ]);
+                } else {
+                  form.setValue('emergencyContacts', undefined);
+                }
+              }}
+            />
+            <label htmlFor="includeEmergencyContact" className="text-lg font-semibold">
+              Add Emergency Contacts
+            </label>
+          </div>
+          <div className="space-y-4 mt-8">
             {form.watch('emergencyContacts')?.map((_, index) => (
               <Card key={index} className="p-4">
                 <CardContent className="p-0 pt-4">
@@ -565,6 +610,18 @@ export default function CitizenshipAndReferencesForm() {
               }}
             >
               Add Another Emergency Contact
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const currentContacts = form.getValues().emergencyContacts || [];
+                currentContacts.pop();
+                form.setValue('emergencyContacts', currentContacts);
+              }}
+            >
+              Remove Emergency Contact
             </Button>
           </div>
 

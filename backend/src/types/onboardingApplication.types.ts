@@ -32,6 +32,25 @@ export interface IOnboardingApplication extends Document {
         startDate?: Date,
         expirationDate?: Date;
     };
+
+    reference?: {
+        firstName: string;
+        lastName: string;
+        middleName?: string;
+        phone: string;
+        email: string;
+        relationship: string;
+    };
+    
+    emergencyContacts?: Array<{
+        firstName: string;
+        lastName: string;
+        middleName?: string;
+        phone: string;
+        email: string;
+        relationship: string;
+    }>;
+
     documents: [{
         type: 'driver_license' | "work_authorization" | "opt_receipt" | 'other';
         fileName: string;
