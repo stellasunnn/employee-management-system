@@ -2,20 +2,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'react-hot-toast';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  resetForm,
   selectOnboardingData,
   selectOnboardingStatus,
   selectOnboardingError,
   setCurrentStep,
   updateFormData,
   selectApplicationStatus,
-  selectCurrentStep
+  selectCurrentStep,
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '@/store/store';
@@ -28,16 +27,21 @@ import { OnboardingFormData } from './schema';
 interface OnboardingFormProps {
   initialData?: OnboardingFormData;
   isResubmission?: boolean;
+  isEditMode?: boolean;
 }
 
 const defaultAvatarUrl =
   'https://img.freepik.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5464.jpg';
 
-export default function OnboardingForm({ initialData, isResubmission = false }: OnboardingFormProps) {
+export default function OnboardingForm({
+  initialData,
+  isResubmission = false,
+  isEditMode = false,
+}: OnboardingFormProps) {
   const dispatch = useDispatch<AppDispatch>();
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
-  const applicationStatus = useSelector(selectApplicationStatus)
+  const applicationStatus = useSelector(selectApplicationStatus);
   const error = useSelector(selectOnboardingError);
   const [avatarPreview, setAvatarPreview] = useState(initialData?.profilePicture || defaultAvatarUrl);
   const { user, loading } = useSelector((state: RootState) => state.auth);
@@ -45,20 +49,20 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
 
   const form = useForm<z.infer<typeof pageOneSchema>>({
     resolver: zodResolver(pageOneSchema),
-    defaultValues: formData
+    defaultValues: formData,
   });
 
   useEffect(() => {
-    if(formData && currentStep===1){
-      form.reset(formData)
+    if (formData && currentStep === 1) {
+      form.reset(formData);
     }
-  }, [formData, form.reset, currentStep])
+  }, [formData, form.reset, currentStep]);
 
   useEffect(() => {
-    if(user){
-      dispatch(updateFormData({email: user.email}))
+    if (user) {
+      dispatch(updateFormData({ email: user.email }));
     }
-  }, [user])
+  }, [user]);
 
   function onSubmit(values: z.infer<typeof pageOneSchema>) {
     dispatch(updateFormData(values));
@@ -66,19 +70,20 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
     if (isResubmission) {
       toast.success('Form updated successfully!');
     }
+    if (!isEditMode) {
+      dispatch(setCurrentStep(2));
+    }
   }
 
   useEffect(() => {
-    if (status === 'succeeded') {
-      toast.success('Form submitted successfully!');
-    } else if (status === 'failed' && (applicationStatus !== ApplicationStatus.NeverSubmitted) && error) {
+    if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
       toast.error(error);
     }
   }, [status, error, form, dispatch]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">Onboarding Form</h2>
+    <div className={`w-full max-w-3xl mx-auto p-6 bg-white ${isEditMode ? '' : 'rounded-lg shadow'}`}>
+      {!isEditMode && <h2 className="text-xl font-bold mb-4">Onboarding Form</h2>}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -209,9 +214,7 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
                 name="address.addressTwo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex">
-                      Address line 2
-                    </FormLabel>
+                    <FormLabel className="flex">Address line 2</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -313,7 +316,7 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
                   Email<span className="text-red-500 ml-1">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input {...field} disabled/>
+                  <Input {...field} disabled />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -390,9 +393,9 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
             )}
           />
 
-          <Button type="submit" className="w-full">
-            {isResubmission ? "Continue Updates" : "Next Page"}
-          </Button>
+          {!isEditMode && <Button type="submit" className="w-full">
+            {isResubmission ? 'Continue Updates' : 'Next Page'}
+          </Button>}
         </form>
       </Form>
     </div>

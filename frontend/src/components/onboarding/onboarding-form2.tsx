@@ -24,12 +24,21 @@ import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
-import { ApplicationStatus, pageTwoSchema } from './schema';
+import { ApplicationStatus, pageTwoSchema, OnboardingFormData } from './schema';
 import { CitizenshipType, WorkAuthorizationType, DocumentType } from '@/components/onboarding/schema';
 
 type DocumentTypeValues = (typeof DocumentType)[keyof typeof DocumentType];
 
-export default function CitizenshipAndReferencesForm() {
+interface OnboardingFormTwoProps {
+  initialData?: OnboardingFormData;
+  isEditMode?: boolean;
+  isResubmission?: boolean;
+}
+export default function OnboardingFormTwo({
+  initialData, 
+  isEditMode = false,
+  isResubmission = false
+}: OnboardingFormTwoProps) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const formData = useSelector(selectOnboardingData);
@@ -37,12 +46,12 @@ export default function CitizenshipAndReferencesForm() {
   const error = useSelector(selectOnboardingError);
   const applicationStatus = useSelector(selectApplicationStatus);
   const currentStep = useSelector(selectCurrentStep);
-
+  const dataToUse = initialData || formData;
   const [isPermanentResident, setIsPermanentResident] = useState(
-    formData.citizenshipStatus?.isPermanentResident || false,
+    dataToUse.citizenshipStatus?.isPermanentResident || false,
   );
 
-  const [workAuthType, setWorkAuthType] = useState<string>(formData?.citizenshipStatus?.workAuthorizationType || '');
+  const [workAuthType, setWorkAuthType] = useState<string>(dataToUse?.citizenshipStatus?.workAuthorizationType || '');
 
   const [documents, setDocuments] = useState<File[]>([]);
   const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
@@ -50,7 +59,7 @@ export default function CitizenshipAndReferencesForm() {
   const form = useForm<z.infer<typeof pageTwoSchema>>({
     resolver: zodResolver(pageTwoSchema),
     defaultValues: {
-      citizenshipStatus: formData?.citizenshipStatus || {
+      citizenshipStatus: dataToUse?.citizenshipStatus || {
         isPermanentResident: false,
         type: undefined,
         workAuthorizationType: undefined,
@@ -58,7 +67,7 @@ export default function CitizenshipAndReferencesForm() {
         startDate: '',
         expirationDate: '',
       },
-      reference: formData?.reference || {
+      reference: dataToUse?.reference || {
         firstName: '',
         middleName: '',
         lastName: '',
@@ -66,7 +75,7 @@ export default function CitizenshipAndReferencesForm() {
         email: '',
         relationship: '',
       },
-      emergencyContacts: formData?.emergencyContacts || [
+      emergencyContacts: dataToUse?.emergencyContacts || [
         {
           firstName: '',
           middleName: '',
@@ -76,7 +85,7 @@ export default function CitizenshipAndReferencesForm() {
           relationship: '',
         },
       ],
-      documents: formData?.documents || [],
+      documents: dataToUse?.documents || [],
     },
   });
 
@@ -133,13 +142,11 @@ export default function CitizenshipAndReferencesForm() {
   };
 
   function onSubmit(values: z.infer<typeof pageTwoSchema>) {
-    // First, update Redux with the current form values
     dispatch(updateFormData(values));
 
-    // Then, get the latest combined data from Redux and submit it
     const completeData = {
-      ...formData, // This is the existing data from page 1
-      ...values, // This is the current data from page 2
+      ...formData, 
+      ...values, 
     };
 
     console.log('Submitting combined data:', completeData);
@@ -147,16 +154,15 @@ export default function CitizenshipAndReferencesForm() {
   }
 
   useEffect(() => {
-    if (status === 'succeeded') {
-      toast.success('Form submitted successfully!');
-    } else if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
+    if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
       toast.error(error);
     }
   }, [status, error, navigate]);
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">Citizenship & References</h2>
+    <div className={`w-full max-w-3xl mx-auto p-6 bg-white ${isEditMode ? '' : 'rounded-lg shadow'}`}>
+      {!isEditMode && 
+      <h2 className="text-xl font-bold mb-4">Citizenship & References</h2>}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -661,12 +667,13 @@ export default function CitizenshipAndReferencesForm() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6">
+          {!isEditMode && <div className="flex justify-between pt-6">
             <Button type="button" variant="outline" onClick={handleBack}>
               Back
             </Button>
             <Button type="submit">Submit</Button>
-          </div>
+          </div>}
+
         </form>
       </Form>
     </div>
