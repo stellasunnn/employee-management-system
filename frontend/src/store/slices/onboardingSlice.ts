@@ -3,13 +3,10 @@ import onboardingApi from '@/api/onboarding';
 import { RootState } from '../store';
 import { error } from 'console';
 import { set } from 'react-hook-form';
-import {
-    OnboardingFormData,
-    ApplicationStatus,
-    ApplicationStatusResponse,
-    Document,
-    CitizenshipType
-  } from '../../types';
+import { fullFormSchema } from '@/components/onboarding/schema';
+import { OnboardingFormData } from '@/components/onboarding/schema';
+
+import { ApplicationStatus, CitizenshipType } from '@/components/onboarding/schema';
 
 interface OnboardingState {
   formData: OnboardingFormData;
@@ -40,8 +37,7 @@ const initialState: OnboardingState = {
     email: 'user@example.com', // Pre-filled example
     ssn: '',
     dateOfBirth: '',
-    gender: undefined,
-
+    gender: 'prefer_not_to_say',
     citizenshipStatus: {
       isPermanentResident: false,
       type: CitizenshipType.WorkAuthorization,

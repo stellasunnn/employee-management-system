@@ -1,12 +1,9 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Document } from '../../types';
-import onboardingApi from '../../api/onboarding';
+import { Documents } from "./schema";
 
-const DocumentList: React.FC<{ documents: Document[] }> = ({ documents }) => {
+const DocumentList: React.FC<{ documents: Documents }> = ({ documents }) => {
   return (
 	<div>
-	  {documents.map((document, index) => (
+	  {documents?.map((document, index) => (
 		<div key={index}>{document.fileName}</div>
 	  ))}
 	</div>

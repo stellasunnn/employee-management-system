@@ -2,9 +2,7 @@
 import { useSelector } from 'react-redux';
 import { selectOnboardingData, selectDocuments} from '../../store/slices/onboardingSlice';
 
-import { RootState } from '../../store/store';
 import DocumentList from './DocumentList';
-import { Document } from '../../types';
 
 const PendingView: React.FC = () => {
   const formData = useSelector(selectOnboardingData);

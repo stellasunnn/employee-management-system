@@ -5,15 +5,16 @@ import OnboardingForm1 from '../components/onboarding/onboarding-form1';
 import OnboardingForm2 from '../components/onboarding/onboarding-form2';
 import PendingView from '../components/onboarding/PendingView';
 import RejectedView from '../components/onboarding/RejectedView';
-import StatusTracker from '../components/onboarding/statusTracker';
+import StatusTracker from '../components/onboarding/StatusTracker';
 import { 
   selectCurrentStep, 
   selectApplicationStatus, 
   selectFeedback,
   checkApplicationStatus,
-  ApplicationStatus
 } from '@/store/slices/onboardingSlice';
 import { AppDispatch } from '@/store/store';
+
+import { ApplicationStatus } from '@/components/onboarding/schema';
 
 const Onboarding = () => {
   const dispatch = useDispatch<AppDispatch>();

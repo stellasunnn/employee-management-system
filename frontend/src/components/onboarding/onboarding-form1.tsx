@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { pageOneSchema, pageTwoSchema } from './schema';
 import { Gender } from './schema';
-import { OnboardingFormData } from '../../types';
+import { OnboardingFormData } from './schema';
 
 interface OnboardingFormProps {
   initialData?: OnboardingFormData;
