@@ -4,6 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { loadUser, logout } from '../store/slices/authSlice';
 import { RootState, AppDispatch } from '../store/store';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import {
+  resetForm,
+  selectOnboardingData,
+  selectOnboardingStatus,
+  selectOnboardingError,
+  setCurrentStep,
+  updateFormData,
+  selectApplicationStatus
+} from '@/store/slices/onboardingSlice';
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();

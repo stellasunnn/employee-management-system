@@ -14,12 +14,14 @@ import {
   selectOnboardingError,
   setCurrentStep,
   updateFormData,
+  selectApplicationStatus,
+  selectCurrentStep
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
-import { AppDispatch } from '@/store/store';
+import { AppDispatch, RootState } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { pageOneSchema, pageTwoSchema } from './schema';
+import { ApplicationStatus, pageOneSchema, pageTwoSchema } from './schema';
 import { Gender } from './schema';
 import { OnboardingFormData } from './schema';
 
@@ -35,33 +37,28 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
   const dispatch = useDispatch<AppDispatch>();
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
+  const applicationStatus = useSelector(selectApplicationStatus)
   const error = useSelector(selectOnboardingError);
   const [avatarPreview, setAvatarPreview] = useState(initialData?.profilePicture || defaultAvatarUrl);
-  const navigate = useNavigate();
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const currentStep = useSelector(selectCurrentStep);
 
   const form = useForm<z.infer<typeof pageOneSchema>>({
     resolver: zodResolver(pageOneSchema),
-    defaultValues: initialData || {
-      firstName: '',
-      middleName: '',
-      lastName: '',
-      preferredName: '',
-      profilePicture: '',
-      address: {
-        addressOne: '',
-        addressTwo: '',
-        city: '',
-        state: '',
-        zipCode: '',
-      },
-      cellPhone: '',
-      workPhone: '',
-      email: 'user@example.com', // Pre-filled example
-      ssn: '',
-      dateOfBirth: '',
-      gender: undefined,
-    },
+    defaultValues: formData
   });
+
+  useEffect(() => {
+    if(formData && currentStep===1){
+      form.reset(formData)
+    }
+  }, [formData, form.reset, currentStep])
+
+  useEffect(() => {
+    if(user){
+      dispatch(updateFormData({email: user.email}))
+    }
+  }, [user])
 
   function onSubmit(values: z.infer<typeof pageOneSchema>) {
     dispatch(updateFormData(values));
@@ -74,9 +71,7 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
   useEffect(() => {
     if (status === 'succeeded') {
       toast.success('Form submitted successfully!');
-      form.reset();
-      dispatch(resetForm());
-    } else if (status === 'failed' && error) {
+    } else if (status === 'failed' && (applicationStatus !== ApplicationStatus.NeverSubmitted) && error) {
       toast.error(error);
     }
   }, [status, error, form, dispatch]);
@@ -318,7 +313,7 @@ export default function OnboardingForm({ initialData, isResubmission = false }: 
                   Email<span className="text-red-500 ml-1">*</span>
                 </FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} disabled/>
                 </FormControl>
                 <FormMessage />
               </FormItem>

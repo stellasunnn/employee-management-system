@@ -1,5 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
 import onboardingApi from '@/api/onboarding';
+import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { error } from 'console';
 import { set } from 'react-hook-form';

@@ -15,12 +15,15 @@ import {
   selectOnboardingStatus,
   selectOnboardingError,
   updateFormData,
+  selectApplicationStatus,
+  selectCurrentStep,
+  setCurrentStep
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
-import { pageTwoSchema } from './schema';
+import { ApplicationStatus, pageTwoSchema } from './schema';
 import { CitizenshipType, WorkAuthorizationType, DocumentType } from '@/components/onboarding/schema';
 
 type DocumentTypeValues = (typeof DocumentType)[keyof typeof DocumentType];
@@ -31,6 +34,8 @@ export default function CitizenshipAndReferencesForm() {
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
   const error = useSelector(selectOnboardingError);
+  const applicationStatus = useSelector(selectApplicationStatus)
+  const currentStep = useSelector(selectCurrentStep);
 
   const [isPermanentResident, setIsPermanentResident] = useState(
     formData.citizenshipStatus?.isPermanentResident || false,
@@ -73,6 +78,12 @@ export default function CitizenshipAndReferencesForm() {
       documents: formData?.documents || [],
     },
   });
+
+  useEffect(() => {
+    if(formData && currentStep === 2){
+      form.reset(formData)
+    }
+  }, [formData, form.reset, currentStep])
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
@@ -117,7 +128,7 @@ export default function CitizenshipAndReferencesForm() {
         ...values,
       }),
     );
-    navigate('/onboarding');
+    dispatch(setCurrentStep(1));
   };
 
   function onSubmit(values: z.infer<typeof pageTwoSchema>) {
@@ -137,10 +148,9 @@ export default function CitizenshipAndReferencesForm() {
   useEffect(() => {
     if (status === 'succeeded') {
       toast.success('Form submitted successfully!');
-      navigate('/dashboard');
-    } else if (status === 'failed' && error) {
-      toast.error(error);
-    }
+    } else if (status === 'failed' && (applicationStatus !== ApplicationStatus.NeverSubmitted) && error) {
+          toast.error(error);
+        }
   }, [status, error, navigate]);
 
   return (

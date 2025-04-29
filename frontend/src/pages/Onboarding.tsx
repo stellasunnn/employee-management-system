@@ -41,28 +41,24 @@ const Onboarding = () => {
     );
   }
   
-  if (applicationStatus === ApplicationStatus.Rejected) {
-    return (
-      <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-        <StatusTracker />
-        <RejectedView feedback={feedback} />
-      </div>
-    );
-  }
-  
   if (applicationStatus === ApplicationStatus.Approved) {
     return <Navigate to="/home" replace />;
   }
   
   // If never submitted or form is in progress, show the multi-step form
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <StatusTracker />
+    <div className="flex flex-col min-h-svh w-full items-center justify-center p-6 md:p-10">
+      {/* <StatusTracker /> */}
+      {(applicationStatus ===  ApplicationStatus.Rejected) &&
+      <div className='w-full max-w-3xl mx-auto'>
+        <RejectedView feedback={feedback} />
+      </div>}
+  
       <div className="w-full">
         {currentStep === 1 ? (
           <OnboardingForm1 />
         ) : (
-          <OnboardingForm2 />
+          <OnboardingForm2 /> 
         )}
       </div>
     </div>
