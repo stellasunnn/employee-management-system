@@ -15,6 +15,8 @@ import {
   updateFormData,
   selectApplicationStatus,
   selectCurrentStep,
+  setRequestSubmitFromHome,
+  selectRequestSubmitFromHome
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '@/store/store';
@@ -46,6 +48,7 @@ export default function OnboardingForm({
   const [avatarPreview, setAvatarPreview] = useState(initialData?.profilePicture || defaultAvatarUrl);
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const currentStep = useSelector(selectCurrentStep);
+  const requestSubmitFromHome = useSelector(selectRequestSubmitFromHome)
 
   const form = useForm<z.infer<typeof pageOneSchema>>({
     resolver: zodResolver(pageOneSchema),
@@ -64,9 +67,16 @@ export default function OnboardingForm({
     }
   }, [user]);
 
+  useEffect(() => {
+    if(requestSubmitFromHome && isEditMode){
+      console.log("Submitting form 1")
+      form.handleSubmit((onSubmit))();
+      dispatch(setRequestSubmitFromHome(false))
+    }
+  },[requestSubmitFromHome, dispatch, form, isEditMode])
+
   function onSubmit(values: z.infer<typeof pageOneSchema>) {
     dispatch(updateFormData(values));
-    dispatch(setCurrentStep(2));
     if (isResubmission) {
       toast.success('Form updated successfully!');
     }

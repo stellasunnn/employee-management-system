@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import onboardingApi from '@/api/onboarding';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -16,6 +16,7 @@ interface OnboardingState {
   currentStep: number;
   applicationStatus: ApplicationStatus;
   feedback: string;
+  requestSubmitFromHome: boolean;
 }
 
 // Initial state
@@ -72,6 +73,7 @@ const initialState: OnboardingState = {
   currentStep: 1,
   applicationStatus: ApplicationStatus.NeverSubmitted,
   feedback: '',
+  requestSubmitFromHome: false,
 };
 
 export const submitOnboardingForm = createAsyncThunk(
@@ -122,6 +124,9 @@ const onboardingSlice = createSlice({
 
     setFeedback: (state, action: PayloadAction<string>) => {
       state.feedback = action.payload;
+    },
+    setRequestSubmitFromHome: (state, action: PayloadAction<boolean>) => {
+      state.requestSubmitFromHome = action.payload;
     },
 
     resetForm: (state) => {
@@ -184,7 +189,7 @@ const onboardingSlice = createSlice({
   },
 });
 
-export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback } = onboardingSlice.actions;
+export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback, setRequestSubmitFromHome } = onboardingSlice.actions;
 
 export const selectOnboardingData = (state: RootState) => state.onboarding.formData;
 export const selectOnboardingStatus = (state: RootState) => state.onboarding.status;
@@ -193,4 +198,5 @@ export const selectCurrentStep = (state: RootState) => state.onboarding.currentS
 export const selectApplicationStatus = (state: RootState) => state.onboarding.applicationStatus;
 export const selectFeedback = (state: RootState) => state.onboarding.feedback;
 export const selectDocuments = (state: RootState) => state.onboarding.formData.documents;
+export const selectRequestSubmitFromHome = (state: RootState) => state.onboarding.requestSubmitFromHome
 export default onboardingSlice.reducer;

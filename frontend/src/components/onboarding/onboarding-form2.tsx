@@ -19,6 +19,8 @@ import {
   selectApplicationStatus,
   selectCurrentStep,
   setCurrentStep,
+  setRequestSubmitFromHome,
+  selectRequestSubmitFromHome
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
 import { useEffect, useState } from 'react';
@@ -55,6 +57,8 @@ export default function OnboardingFormTwo({
 
   const [documents, setDocuments] = useState<File[]>([]);
   const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
+  const requestSubmitFromHome = useSelector(selectRequestSubmitFromHome)
+
 
   const form = useForm<z.infer<typeof pageTwoSchema>>({
     resolver: zodResolver(pageTwoSchema),
@@ -94,6 +98,14 @@ export default function OnboardingFormTwo({
       form.reset(formData);
     }
   }, [formData, form.reset, currentStep]);
+
+  useEffect(() => {
+    if(requestSubmitFromHome && isEditMode){
+      console.log("Submitting form 2")
+      form.handleSubmit((onSubmit))();
+      dispatch(setRequestSubmitFromHome(false))
+    }
+  }, [requestSubmitFromHome, dispatch, form, isEditMode])
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {

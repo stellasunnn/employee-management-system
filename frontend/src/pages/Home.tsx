@@ -14,6 +14,7 @@ import {
   selectApplicationStatus,
   selectDocuments,
   fetchApplicationData,
+  setRequestSubmitFromHome
 } from '@/store/slices/onboardingSlice';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
@@ -26,6 +27,7 @@ const Home = () => {
   const navigate = useNavigate();
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const applicationStatus = useSelector(selectApplicationStatus);
+  const onboardingStatus = useSelector(selectOnboardingStatus);
   const formData = useSelector(selectOnboardingData);
   const documents = useSelector(selectDocuments) || [];
   const [editMode, setEditMode] = useState(false);
@@ -57,7 +59,7 @@ const Home = () => {
   }
 
   const handleSave = () => {
-    setEditMode(false);
+    dispatch(setRequestSubmitFromHome(true))
   };
 
   const handleCancel = () => {
@@ -107,14 +109,14 @@ const Home = () => {
                   </div>
                 )}
               </div>
+              {/* edit mode */}
               {editMode ? (
                 <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow">
-                  <OnboardingFormOne initialData={formData} isResubmission={true} isEditMode={true}/>
-                  <OnboardingFormTwo initialData={formData} isResubmission={true} isEditMode={true}/>
+                  <OnboardingFormOne initialData={formData} isResubmission={false} isEditMode={true}/>
+                  <OnboardingFormTwo initialData={formData} isResubmission={false} isEditMode={true}/>
                   
                 </div>
               ) : (
-                // Display view-only mode with sections
                 <div className="space-y-6">
                   {/* Name & Profile Section */}
                   <div className="p-6 border rounded-lg bg-white shadow-sm">
