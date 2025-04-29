@@ -6,11 +6,18 @@ export const Gender = {
   PreferNotToSay: 'prefer_not_to_say',
 } as const;
 
-export const CitizenshipType = {
-  GreenCard: 'green_card',
-  Citizen: 'citizen',
-  WorkAuthorization: 'work_authorization',
-} as const;
+export enum CitizenshipType {
+  GreenCard = 'green_card',
+  Citizen = 'citizen',
+  WorkAuthorization = 'work_authorization'
+}
+
+export enum ApplicationStatus {
+  NeverSubmitted = 'NEVER_SUBMITTED',
+  Pending = 'PENDING',
+  Rejected = 'REJECTED',
+  Approved = 'APPROVED'
+}
 
 export const WorkAuthorizationType = {
   H1B: 'H1-B',
@@ -153,6 +160,10 @@ export const pageTwoSchema = fullFormSchema.pick({
   documents: true,
 });
 
-export type FullFormValues = z.infer<typeof fullFormSchema>;
 export type pageOneValues = z.infer<typeof pageOneSchema>;
+
 export type pageTwoValues = z.infer<typeof pageTwoSchema>;
+
+export type OnboardingFormData = z.infer<typeof fullFormSchema>
+
+export type Documents = z.infer<typeof fullFormSchema>["documents"]

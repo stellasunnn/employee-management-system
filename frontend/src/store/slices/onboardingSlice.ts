@@ -3,69 +3,19 @@ import onboardingApi from '@/api/onboarding';
 import { RootState } from '../store';
 import { error } from 'console';
 import { set } from 'react-hook-form';
+import { fullFormSchema } from '@/components/onboarding/schema';
+import { OnboardingFormData } from '@/components/onboarding/schema';
 
-interface OnboardingFormData {
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  preferredName?: string;
-  profilePicture?: string;
-  address: {
-    addressOne: string;
-    addressTwo?: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-  cellPhone: string;
-  workPhone?: string;
-  email: string;
-  ssn: string;
-  dateOfBirth: string;
-  gender: 'male' | 'female' | 'prefer_not_to_say' | undefined;
-
-  // Page 2
-  citizenshipStatus?: {
-    isPermanentResident: boolean;
-    type: 'green_card' | 'citizen' | 'work_authorization';
-    workAuthorizationType?: 'H1-B' | 'H4' | 'L2' | 'F1' | 'other';
-    workAuthorizationOther?: string;
-    startDate?: string;
-    expirationDate?: string;
-  };
-  reference?: {
-    firstName: string;
-    middleName?: string;
-    lastName: string;
-    phone: string;
-    email: string;
-    relationship: string;
-  };
-  emergencyContacts?: Array<{
-    firstName: string;
-    middleName?: string;
-    lastName: string;
-    phone: string;
-    email: string;
-    relationship: string;
-  }>;
-  documents?: Array<{
-    type: 'driver_license' | "work_authorization" | "opt_receipt" | 'other';
-    fileName: string;
-    fileUrl?: string;
-    uploadDate?: Date;
-  }>;
-}
+import { ApplicationStatus, CitizenshipType } from '@/components/onboarding/schema';
 
 interface OnboardingState {
   formData: OnboardingFormData;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   currentStep: number;
-  applicationStatus: 'NEVER_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  applicationStatus: ApplicationStatus;
   feedback: string;
 }
-
 
 // Initial state
 const initialState: OnboardingState = {
@@ -87,11 +37,10 @@ const initialState: OnboardingState = {
     email: 'user@example.com', // Pre-filled example
     ssn: '',
     dateOfBirth: '',
-    gender: undefined,
-
+    gender: 'prefer_not_to_say',
     citizenshipStatus: {
       isPermanentResident: false,
-      type: 'work_authorization',
+      type: CitizenshipType.WorkAuthorization,
       workAuthorizationType: undefined,
       workAuthorizationOther: '',
       startDate: '',
@@ -120,10 +69,9 @@ const initialState: OnboardingState = {
   status: 'idle',
   error: null,
   currentStep: 1,
-  applicationStatus: 'NEVER_SUBMITTED',
+  applicationStatus: ApplicationStatus.NeverSubmitted,
   feedback: '',
 };
-
 
 export const submitOnboardingForm = createAsyncThunk(
   'onboarding/submit',
@@ -137,6 +85,24 @@ export const submitOnboardingForm = createAsyncThunk(
   },
 );
 
+export const checkApplicationStatus = createAsyncThunk('onboarding/checkStatus', async (_, { rejectWithValue }) => {
+  try {
+    const response = await onboardingApi.fetchApplicationStatus();
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to fetch status');
+  }
+});
+
+export const resubmitApplication = createAsyncThunk('onboarding/resubmit', async (formData, { rejectWithValue }) => {
+  try {
+    const response = await onboardingApi.resubmitApplication(formData);
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to resubmit application');
+  }
+});
+
 const onboardingSlice = createSlice({
   name: 'onboarding',
   initialState,
@@ -149,7 +115,7 @@ const onboardingSlice = createSlice({
       state.currentStep = action.payload;
     },
 
-    setApplicationStatus: (state, action: PayloadAction<'NEVER_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED'>) => {
+    setApplicationStatus: (state, action: PayloadAction<ApplicationStatus>) => {
       state.applicationStatus = action.payload;
     },
 
@@ -165,29 +131,58 @@ const onboardingSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Submit form
       .addCase(submitOnboardingForm.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(submitOnboardingForm.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        if(action.payload.applicationStatus) {
-            state.applicationStatus = action.payload.applicationStatus;
-            if(action.payload.applicationStatus === 'REJECTED' && action.payload.feedback) {
-                state.feedback = action.payload.feedback;
-            }
-        }else{
-            state.applicationStatus = 'PENDING';
+        if (action.payload.applicationStatus) {
+          state.applicationStatus = action.payload.applicationStatus;
+          if (action.payload.applicationStatus === 'REJECTED' && action.payload.feedback) {
+            state.feedback = action.payload.feedback;
+          }
+        } else {
+          state.applicationStatus = ApplicationStatus.Pending;
         }
       })
       .addCase(submitOnboardingForm.rejected, (state, action) => {
         state.status = 'failed';
         state.error = (action.payload as string) || 'Failed to submit form';
+      })
+
+      // Check application status
+      .addCase(checkApplicationStatus.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(checkApplicationStatus.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.applicationStatus = action.payload.status;
+        state.feedback = action.payload.feedback || '';
+      })
+      .addCase(checkApplicationStatus.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to fetch application status';
+      })
+
+      // Resubmit application
+      .addCase(resubmitApplication.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(resubmitApplication.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.applicationStatus = ApplicationStatus.Pending;
+        state.error = null;
+      })
+      .addCase(resubmitApplication.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = (action.payload as string) || 'Failed to resubmit application';
       });
   },
 });
 
-export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback} = onboardingSlice.actions;
+export const { resetForm, updateFormData, setCurrentStep, setApplicationStatus, setFeedback } = onboardingSlice.actions;
 
 export const selectOnboardingData = (state: RootState) => state.onboarding.formData;
 export const selectOnboardingStatus = (state: RootState) => state.onboarding.status;
@@ -195,6 +190,5 @@ export const selectOnboardingError = (state: RootState) => state.onboarding.erro
 export const selectCurrentStep = (state: RootState) => state.onboarding.currentStep;
 export const selectApplicationStatus = (state: RootState) => state.onboarding.applicationStatus;
 export const selectFeedback = (state: RootState) => state.onboarding.feedback;
-
+export const selectDocuments = (state: RootState) => state.onboarding.formData.documents;
 export default onboardingSlice.reducer;
- 

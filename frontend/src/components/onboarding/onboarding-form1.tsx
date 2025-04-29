@@ -13,34 +13,41 @@ import {
   selectOnboardingStatus,
   selectOnboardingError,
   setCurrentStep,
-  updateFormData
+  updateFormData,
 } from '@/store/slices/onboardingSlice';
 import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { pageOneSchema, pageTwoSchema } from './schema';
-import { Gender } from "./schema"
+import { Gender } from './schema';
+import { OnboardingFormData } from './schema';
+
+interface OnboardingFormProps {
+  initialData?: OnboardingFormData;
+  isResubmission?: boolean;
+}
 
 const defaultAvatarUrl =
   'https://img.freepik.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5464.jpg';
-export default function OnboardingForm() {
+
+export default function OnboardingForm({ initialData, isResubmission = false }: OnboardingFormProps) {
   const dispatch = useDispatch<AppDispatch>();
   const formData = useSelector(selectOnboardingData);
   const status = useSelector(selectOnboardingStatus);
   const error = useSelector(selectOnboardingError);
-  const [avatarPreview, setAvatarPreview] = useState(defaultAvatarUrl);
+  const [avatarPreview, setAvatarPreview] = useState(initialData?.profilePicture || defaultAvatarUrl);
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof pageOneSchema>>({
     resolver: zodResolver(pageOneSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       firstName: '',
       middleName: '',
       lastName: '',
       preferredName: '',
-      profilePicture:"",
-    address: {
+      profilePicture: '',
+      address: {
         addressOne: '',
         addressTwo: '',
         city: '',
@@ -52,13 +59,16 @@ export default function OnboardingForm() {
       email: 'user@example.com', // Pre-filled example
       ssn: '',
       dateOfBirth: '',
-      gender: undefined
+      gender: undefined,
     },
   });
 
   function onSubmit(values: z.infer<typeof pageOneSchema>) {
     dispatch(updateFormData(values));
     dispatch(setCurrentStep(2));
+    if (isResubmission) {
+      toast.success('Form updated successfully!');
+    }
   }
 
   useEffect(() => {
@@ -154,13 +164,15 @@ export default function OnboardingForm() {
                     <div className="flex-grow mr-10">
                       <FormLabel>Upload profile picture</FormLabel>
                       <FormControl>
-                        <Input className="mt-4" 
-                        placeholder="enter image url" 
-                        value={avatarPreview} 
-                        onChange={(e) => {
-                          setAvatarPreview(e.target.value);
-                          field.onChange(e);
-                        }} />
+                        <Input
+                          className="mt-4"
+                          placeholder="enter image url"
+                          value={avatarPreview}
+                          onChange={(e) => {
+                            setAvatarPreview(e.target.value);
+                            field.onChange(e);
+                          }}
+                        />
                       </FormControl>
                     </div>
 
@@ -384,7 +396,7 @@ export default function OnboardingForm() {
           />
 
           <Button type="submit" className="w-full">
-            Next Page
+            {isResubmission ? "Continue Updates" : "Next Page"}
           </Button>
         </form>
       </Form>

@@ -2,12 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import onboardingApi from '@/api/onboarding';
 import { RootState } from '../store';
 import { error } from 'console';
-
-interface Document {
-  id: string;
-  fileNmae: string;
-  url: string;
-}
+import { Document, UploadDocumentResponse } from '../../types'
 
 interface DocumentUploadState {
   documents: Document[];

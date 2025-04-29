@@ -21,27 +21,7 @@ import { useEffect, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { pageTwoSchema } from './schema';
-
-const CitizenshipType = {
-  GreenCard: 'green_card',
-  Citizen: 'citizen',
-  WorkAuthorization: 'work_authorization',
-} as const;
-
-const WorkAuthorizationType = {
-  H1B: 'H1-B',
-  H4: 'H4',
-  L2: 'L2',
-  F1: 'F1',
-  Other: 'other',
-} as const;
-
-const DocumentType = {
-  DriverLicense: 'driver_license',
-  WorkAuthorization: 'work_authorization',
-  OptReceipt: 'opt_receipt',
-  Other: 'other',
-} as const;
+import { CitizenshipType, WorkAuthorizationType, DocumentType } from '@/components/onboarding/schema';
 
 type DocumentTypeValues = (typeof DocumentType)[keyof typeof DocumentType];
 
@@ -302,7 +282,7 @@ export default function CitizenshipAndReferencesForm() {
                     <Input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileUpload(e, DocumentType.OptReceipt)}
+                      onChange={(e) => handleFileUpload(e, DocumentType.OPTReceipt)}
                     />
                   </div>
                 )}
