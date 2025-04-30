@@ -122,6 +122,25 @@ export default function OnboardingFormTwo({
     }
   }, [form.watch('citizenshipStatus.isPermanentResident')]);
 
+  // Initialize form with existing data
+  useEffect(() => {
+    if (isResubmission && dataToUse?.documents) {
+      console.log('Resubmission mode, setting up existing documents:', dataToUse.documents);
+      
+      // Set document previews from existing documents
+      const previews = dataToUse.documents.reduce((acc, doc) => ({
+        ...acc,
+        [doc.type]: doc.fileName
+      }), {});
+
+      console.log('Setting document previews:', previews);
+      setDocumentPreviews(previews);
+
+      // Set form documents
+      form.setValue('documents', dataToUse.documents);
+    }
+  }, [isResubmission, dataToUse?.documents]);
+
   // Handle file selection
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -398,13 +417,24 @@ export default function OnboardingFormTwo({
                 )}
 
                 {workAuthType === WorkAuthorizationType.F1 && (
-                  <div className="border p-4 rounded-md bg-gray-50">
-                    <p className="mb-2">Please upload your OPT Receipt</p>
-                    <Input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => handleFileUpload(e, DocumentType.OPTReceipt)}
-                    />
+                  <div className="border p-4 rounded-md">
+                    <FormLabel className="block mb-2">OPT Receipt</FormLabel>
+                    <div className="relative">
+                      <Button variant="outline" className="w-[120px]" asChild>
+                        <label>
+                          Choose File
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => handleFileUpload(e, DocumentType.OPTReceipt)}
+                            className="hidden"
+                          />
+                        </label>
+                      </Button>
+                      <span className="ml-3 text-sm">
+                        {documentPreviews[DocumentType.OPTReceipt] || "No file chosen"}
+                      </span>
+                    </div>
                   </div>
                 )}
 
@@ -738,34 +768,75 @@ export default function OnboardingFormTwo({
           {/* Document Uploads */}
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold">Required Documents</h3>
+            {isResubmission && (
+              <div className="mb-4 p-4 bg-blue-50 rounded">
+                <p className="text-sm text-blue-600">
+                  You can keep your existing documents or upload new ones to replace them.
+                </p>
+              </div>
+            )}
 
             <div className="border p-4 rounded-md">
               <FormLabel className="block mb-2">Driver's License</FormLabel>
-              <Input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => handleFileUpload(e, DocumentType.DriverLicense)}
-              />
-              {documentPreviews[DocumentType.DriverLicense] && (
-                <div className="mt-2">
-                  <p className="text-sm text-green-600">File uploaded</p>
-                </div>
-              )}
+              <div className="relative">
+                <Button variant="outline" className="w-[120px]" asChild>
+                  <label>
+                    Choose File
+                    <Input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => handleFileUpload(e, DocumentType.DriverLicense)}
+                      className="hidden"
+                    />
+                  </label>
+                </Button>
+                <span className="ml-3 text-sm">
+                  {documentPreviews[DocumentType.DriverLicense] || "No file chosen"}
+                </span>
+              </div>
             </div>
 
             {!isPermanentResident && (
               <div className="border p-4 rounded-md">
                 <FormLabel className="block mb-2">Work Authorization Document</FormLabel>
-                <Input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(e, DocumentType.WorkAuthorization)}
-                />
-                {documentPreviews[DocumentType.WorkAuthorization] && (
-                  <div className="mt-2">
-                    <p className="text-sm text-green-600">File uploaded</p>
-                  </div>
-                )}
+                <div className="relative">
+                  <Button variant="outline" className="w-[120px]" asChild>
+                    <label>
+                      Choose File
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileUpload(e, DocumentType.WorkAuthorization)}
+                        className="hidden"
+                      />
+                    </label>
+                  </Button>
+                  <span className="ml-3 text-sm">
+                    {documentPreviews[DocumentType.WorkAuthorization] || "No file chosen"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {workAuthType === WorkAuthorizationType.F1 && (
+              <div className="border p-4 rounded-md">
+                <FormLabel className="block mb-2">OPT Receipt</FormLabel>
+                <div className="relative">
+                  <Button variant="outline" className="w-[120px]" asChild>
+                    <label>
+                      Choose File
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileUpload(e, DocumentType.OPTReceipt)}
+                        className="hidden"
+                      />
+                    </label>
+                  </Button>
+                  <span className="ml-3 text-sm">
+                    {documentPreviews[DocumentType.OPTReceipt] || "No file chosen"}
+                  </span>
+                </div>
               </div>
             )}
           </div>
