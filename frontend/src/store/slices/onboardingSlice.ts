@@ -147,8 +147,8 @@ const onboardingSlice = createSlice({
         state.requestFromHomeState = 'submit_complete'
         if (action.payload.applicationStatus) {
           state.applicationStatus = action.payload.applicationStatus;
-          if (action.payload.applicationStatus === ApplicationStatus && action.payload.feedback) {
-            state.feedback = action.payload.feedback;
+          if (action.payload.applicationStatus === ApplicationStatus.Rejected && action.payload.rejectionFeedback) {
+            state.feedback = action.payload.rejectionFeedback;
           }
         } else {
           state.applicationStatus = ApplicationStatus.Pending;
@@ -165,9 +165,12 @@ const onboardingSlice = createSlice({
       })
       .addCase(fetchApplicationData.fulfilled, (state, action) => {
         state.status = 'succeeded';
+
+        console.log("Fetched application data:", action.payload);
+
         state.applicationStatus = action.payload.status;
         state.formData = action.payload;
-        state.feedback = action.payload.feedback || '';
+        state.feedback = action.payload.rejectionFeedback || '';
       })
       .addCase(fetchApplicationData.rejected, (state, action) => {
         state.status = 'failed';

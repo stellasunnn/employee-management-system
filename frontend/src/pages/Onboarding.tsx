@@ -9,7 +9,6 @@ import StatusTracker from '../components/onboarding/StatusTracker';
 import { 
   selectCurrentStep, 
   selectApplicationStatus, 
-  selectFeedback,
   selectOnboardingStatus,
   fetchApplicationData
 } from '@/store/slices/onboardingSlice';
@@ -22,7 +21,6 @@ const Onboarding = () => {
   const currentStep = useSelector(selectCurrentStep);
   const applicationStatus = useSelector(selectApplicationStatus);
   const onboardingStatus = useSelector(selectOnboardingStatus)
-  const feedback = useSelector(selectFeedback);
   
   // Check status on initial load
   useEffect(() => {
@@ -51,7 +49,7 @@ const Onboarding = () => {
       {/* <StatusTracker /> */}
       {(applicationStatus ===  ApplicationStatus.Rejected) &&
       <div className='w-full max-w-3xl mx-auto'>
-        <RejectedView feedback={feedback} />
+        <RejectedView />
       </div>}
   
       <div className="w-full">

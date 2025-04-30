@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OnboardingFormData } from '../onboarding/schema';
 
-interface ApplicationDisplayProps {
+export interface ApplicationViewProps {
   formData: OnboardingFormData;
   documents: any[];
   isHRView?: boolean;
@@ -14,14 +14,13 @@ interface ApplicationDisplayProps {
   };
 }
 
-const ApplicationView: React.FC<ApplicationDisplayProps> = ({
+const ApplicationView: React.FC<ApplicationViewProps> = ({
   formData,
   documents = [],
   isHRView = false,
   rejectionFeedback,
   onActionClick,
 }) => {
-  // Helper function to handle document preview
   const handlePreviewClick = (url: string) => {
     if (onActionClick?.onDocumentPreview) {
       onActionClick.onDocumentPreview(url);
@@ -30,7 +29,6 @@ const ApplicationView: React.FC<ApplicationDisplayProps> = ({
     }
   };
 
-  // Helper function to handle document download
   const handleDownloadClick = (url: string, fileName: string) => {
     if (onActionClick?.onDocumentDownload) {
       onActionClick.onDocumentDownload(url, fileName);

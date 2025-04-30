@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import OnboardingFormOne from '../components/onboarding/onboarding-form1';
 import OnboardingFormTwo from '../components/onboarding/onboarding-form2';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ApplicationView from '@/components/shared-components/ApplicationView';
 
 const Home = () => {

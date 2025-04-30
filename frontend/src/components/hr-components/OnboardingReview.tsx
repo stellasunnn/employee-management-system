@@ -61,7 +61,7 @@ const OnboardingReview = () => {
       .then(() => {
         toast.success('Application rejected successfully');
         setViewOpen(false);
-        setFeedback('');
+        setFeedback(feedback);
         setFeedbackMode(false);
         dispatch(fetchApplications(currentStatus));
       })
