@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import hrApi from '@/api/hrApi';
 import { RootState } from '../store';
+import { OnboardingFormData } from '@/components/onboarding/schema';
 
-interface Application {
+interface Application extends OnboardingFormData{
   _id: string;
   firstName: string;
   lastName: string;

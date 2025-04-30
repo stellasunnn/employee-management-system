@@ -88,12 +88,14 @@ export const getApplications = async (req: Request, res: Response) => {
 export const approveApplication = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
+    
     // Find the application
     const application = await OnboardingApplication.findById(id);
     if (!application) {
       return res.status(404).json({ error: "Application not found" });
     }
+
+    if (application?.citizenshipStatus?.workAuthorizationType === "F1") {
 
     // Find the latest OPT receipt document
     const optReceiptDocs = application.documents
@@ -128,6 +130,7 @@ export const approveApplication = async (req: Request, res: Response) => {
     });
 
     await visa.save();
+  }
 
     // Update the application status
     const updatedApplication = await OnboardingApplication.findByIdAndUpdate(
