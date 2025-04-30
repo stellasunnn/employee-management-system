@@ -70,7 +70,7 @@ const Home = () => {
   }
 
   // Redirect to onboarding if no application is found or if application is pending
-  if (onboardingError === 'Onboarding application not found' || applicationStatus === ApplicationStatus.Pending) {
+  if (onboardingError === 'Onboarding application not found' || applicationStatus !== ApplicationStatus.Approved) {
     return <Navigate to="/onboarding" replace />;
   }
 

@@ -44,7 +44,7 @@ const Navbar = ({ onLogout }: NavbarProps) => {
       return (
         <>
           {onboardingError !== 'Onboarding application not found' &&
-            applicationStatus !== ApplicationStatus.Pending && (
+            applicationStatus === ApplicationStatus.Approved && (
               <>
                 <Link to="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
                   Home
