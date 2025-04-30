@@ -22,14 +22,14 @@ const Onboarding = () => {
   const applicationStatus = useSelector(selectApplicationStatus);
   const onboardingStatus = useSelector(selectOnboardingStatus)
   
-  // Check status on initial load
+  // check status on initial load
   useEffect(() => {
     if(onboardingStatus === 'idle') {
       dispatch(fetchApplicationData());
     }
   }, [dispatch, onboardingStatus]);
 
-  // First, check application status
+  // render based on application status
   if (applicationStatus === ApplicationStatus.Pending) {
     return (
       <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
@@ -43,10 +43,8 @@ const Onboarding = () => {
     return <Navigate to="/home" replace />;
   }
   
-  // If never submitted or form is in progress, show the multi-step form
   return (
     <div className="flex flex-col min-h-svh w-full items-center justify-center p-6 md:p-10">
-      {/* <StatusTracker /> */}
       {(applicationStatus ===  ApplicationStatus.Rejected) &&
       <div className='w-full max-w-3xl mx-auto'>
         <RejectedView />

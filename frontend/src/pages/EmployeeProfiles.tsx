@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import ApplicationView from '@/components/shared-components/ApplicationView';
 import { useDispatch, useSelector } from 'react-redux';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { AppDispatch, RootState } from '@/store/store';
 import { fetchApplications, approveApplication, rejectApplication, setCurrentStatus } from '@/store/slices/hrSlice';
-import { OnboardingFormData } from '../onboarding/schema';
-import ApplicationView from '../shared-components/ApplicationView';
+import { OnboardingFormData } from '@/components/onboarding/schema';
+import { selectOnboardingData } from '@/store/slices/onboardingSlice';
 
-const OnboardingReview = () => {
+const EmployeeProfiles = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { applications, loading, error, currentStatus } = useSelector((state: RootState) => state.hr);
+  // const { onboardingData } = useSelector(selectOnboardingData);
 
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -22,8 +24,9 @@ const OnboardingReview = () => {
   const [feedbackMode, setFeedbackMode] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchApplications(currentStatus));
-  }, [dispatch, currentStatus]);
+    dispatch(fetchApplications('approved'));
+  }, [dispatch]);
+  console.log('Applications:', applications);
 
   useEffect(() => {
     if (error) {
@@ -71,15 +74,15 @@ const OnboardingReview = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Onboarding Application Review</CardTitle>
+        <CardTitle>Employee Profiles</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={currentStatus} onValueChange={(value) => handleTabChange(value as any)}>
-          <TabsList className="grid w-full grid-cols-3">
+          {/* <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent value={currentStatus} className="mt-4">
             {loading ? (
@@ -87,28 +90,29 @@ const OnboardingReview = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
               </div>
             ) : applications.length === 0 ? (
-              <p className="text-center py-6 text-gray-500">No {currentStatus} applications found.</p>
+              <p className="text-center py-6 text-gray-500">No employees.</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Full Name</TableHead>
+                    <TableHead>Full Name</TableHead> {/* add sort later */}
+                    <TableHead>SSN</TableHead>
+                    <TableHead>Work Authorization Title</TableHead>
+                    <TableHead>Phone Number</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {applications.map((app) => (
                     <TableRow key={app._id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium" onClick={() => handleViewApplication(app)}>
                         {app.firstName} {app.lastName}
                       </TableCell>
                       <TableCell>{app.email}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="outline" size="sm" onClick={() => handleViewApplication(app)}>
-                          View Application
-                        </Button>
-                      </TableCell>
+                      <TableCell>{app.email}</TableCell>
+                      <TableCell>{app.email}</TableCell>
+                      <TableCell>{app.email}</TableCell>
+
                     </TableRow>
                   ))}
                 </TableBody>
@@ -193,4 +197,4 @@ const OnboardingReview = () => {
   );
 };
 
-export default OnboardingReview;
+export default EmployeeProfiles;
