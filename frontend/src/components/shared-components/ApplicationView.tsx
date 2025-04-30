@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OnboardingFormData } from '../onboarding/schema';
 import { toast } from 'react-hot-toast';
+import { handleFilePreview, handleFileDownload } from '@/utils/fileHandlers';
 
 export interface ApplicationViewProps {
   formData: OnboardingFormData;
@@ -26,51 +27,15 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
     if (onActionClick?.onDocumentPreview) {
       onActionClick.onDocumentPreview(url);
     } else {
-      window.open(url, '_blank');
+      handleFilePreview(url);
     }
   };
 
-  // Handle file download
   const handleDownloadClick = async (fileUrl: string, fileName: string) => {
-    try {
-      const filename = fileUrl.split('/').pop();
-      if (!filename) {
-        throw new Error('Invalid file URL');
-      }
-
-      const response = await fetch(`/api/files/download/${filename}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-
-      // Get the blob from the response
-      const blob = await response.blob();
-      
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(blob);
-      
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      
-      // Append to body, click, and remove
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // Clean up the URL
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('File downloaded successfully');
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error('Failed to download file');
+    if (onActionClick?.onDocumentDownload) {
+      onActionClick.onDocumentDownload(fileUrl, fileName);
+    } else {
+      await handleFileDownload(fileUrl, fileName);
     }
   };
 
