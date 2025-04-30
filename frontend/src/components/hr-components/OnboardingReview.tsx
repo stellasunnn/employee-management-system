@@ -8,18 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { AppDispatch, RootState } from '@/store/store';
-import {
-  fetchApplications,
-  approveApplication,
-  rejectApplication,
-  setCurrentStatus
-} from '@/store/slices/hrSlice';
+import { fetchApplications, approveApplication, rejectApplication, setCurrentStatus } from '@/store/slices/hrSlice';
 import { OnboardingFormData } from '../onboarding/schema';
+import ApplicationView from '../shared-components/ApplicationView';
 
 const OnboardingReview = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { applications, loading, error, currentStatus } = useSelector((state: RootState) => state.hr);
-  
+
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -42,12 +38,12 @@ const OnboardingReview = () => {
 
   const handleViewApplication = (application: any) => {
     setSelectedApplication(application);
-    console.log("Selected application:", selectedApplication)
+    console.log('Selected application:', selectedApplication);
     setViewOpen(true);
   };
 
   const handleApprove = (applicationId: string) => {
-    const id = applicationId || selectedApplication?._id
+    const id = applicationId || selectedApplication?._id;
     dispatch(approveApplication(id))
       .unwrap()
       .then(() => {
@@ -55,7 +51,7 @@ const OnboardingReview = () => {
         setViewOpen(false);
         dispatch(fetchApplications(currentStatus));
       })
-      .catch(err => toast.error(err || 'Failed to approve application'));
+      .catch((err) => toast.error(err || 'Failed to approve application'));
   };
 
   const handleReject = (applicationId: string, feedback: string) => {
@@ -69,7 +65,7 @@ const OnboardingReview = () => {
         setFeedbackMode(false);
         dispatch(fetchApplications(currentStatus));
       })
-      .catch(err => toast.error(err || 'Failed to reject application'));
+      .catch((err) => toast.error(err || 'Failed to reject application'));
   };
 
   return (
@@ -84,7 +80,7 @@ const OnboardingReview = () => {
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value={currentStatus} className="mt-4">
             {loading ? (
               <div className="flex justify-center p-8">
@@ -109,11 +105,7 @@ const OnboardingReview = () => {
                       </TableCell>
                       <TableCell>{app.email}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewApplication(app)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => handleViewApplication(app)}>
                           View Application
                         </Button>
                       </TableCell>
@@ -127,38 +119,37 @@ const OnboardingReview = () => {
 
         {/* Application View Dialog */}
         {selectedApplication && (
-          <Dialog open={viewOpen} onOpenChange={(open) => {
-            setViewOpen(open);
-            if (!open) {
-              setSelectedApplication(null);
-              setFeedback('');
-              setFeedbackMode(false);
-            }
-          }}>
+          <Dialog
+            open={viewOpen}
+            onOpenChange={(open) => {
+              setViewOpen(open);
+              if (!open) {
+                setSelectedApplication(null);
+                setFeedback('');
+                setFeedbackMode(false);
+              }
+            }}
+          >
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {selectedApplication.firstName} {selectedApplication.lastName}'s Application
                 </DialogTitle>
               </DialogHeader>
-              
-              <div className="space-y-6">
-                {/* Reuse your display code from Home.tsx here */}
-                <ApplicationDisplay application={selectedApplication} />
 
-                {/* Rejection feedback display (for rejected applications) */}
-                {currentStatus === 'rejected' && selectedApplication.rejectionFeedback && (
-                  <div className="p-4 border rounded-md bg-red-50 border-red-200">
-                    <h3 className="font-medium text-red-800 mb-2">Rejection Feedback</h3>
-                    <p>{selectedApplication.rejectionFeedback}</p>
-                  </div>
-                )}
+              <div className="space-y-6">
+                <ApplicationView
+                  formData={selectedApplication}
+                  documents={selectedApplication.documents || []}
+                  isHRView={true}
+                  rejectionFeedback={selectedApplication.rejectionFeedback}
+                />
 
                 {/* Actions (only for pending applications) */}
                 {currentStatus === 'pending' && (
                   <div className="p-4 border rounded-md bg-gray-50">
                     <h3 className="font-medium mb-4">Application Review</h3>
-                    
+
                     {feedbackMode ? (
                       <div className="space-y-4">
                         <div>
@@ -171,14 +162,11 @@ const OnboardingReview = () => {
                           />
                         </div>
                         <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => setFeedbackMode(false)}
-                          >
+                          <Button variant="outline" onClick={() => setFeedbackMode(false)}>
                             Cancel
                           </Button>
-                          <Button 
-                            variant="destructive" 
+                          <Button
+                            variant="destructive"
                             onClick={() => handleReject(selectedApplication.id, feedback)}
                             disabled={!feedback.trim()}
                           >
@@ -188,17 +176,10 @@ const OnboardingReview = () => {
                       </div>
                     ) : (
                       <div className="flex justify-end space-x-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setFeedbackMode(true)}
-                        >
+                        <Button variant="outline" onClick={() => setFeedbackMode(true)}>
                           Reject
                         </Button>
-                        <Button 
-                          onClick={() => handleApprove(selectedApplication.id)}
-                        >
-                          Approve
-                        </Button>
+                        <Button onClick={() => handleApprove(selectedApplication.id)}>Approve</Button>
                       </div>
                     )}
                   </div>
@@ -213,7 +194,7 @@ const OnboardingReview = () => {
 };
 
 // Simplified ApplicationDisplay component
-const ApplicationDisplay = ({ application }:{ application : OnboardingFormData}) => {
+const ApplicationDisplay = ({ application }: { application: OnboardingFormData }) => {
   return (
     <div className="space-y-6">
       {/* Name & Profile Section */}
@@ -221,7 +202,8 @@ const ApplicationDisplay = ({ application }:{ application : OnboardingFormData})
         <h2 className="text-lg font-semibold mb-4">Name & Profile</h2>
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-xl font-semibold text-gray-700">
-            {application.firstName?.[0]}{application.lastName?.[0]}
+            {application.firstName?.[0]}
+            {application.lastName?.[0]}
           </div>
           <div className="flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
