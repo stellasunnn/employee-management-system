@@ -16,10 +16,10 @@ const s3Client = new S3Client({
 export const uploadToS3 = async (
   file: Express.Multer.File
 ): Promise<string> => {
-  console.log(process.env.AWS_REGION, process.env.AWS_BUCKET_NAME);
+  console.log(process.env.AWS_REGION, process.env.AWS_S3_BUCKET_NAME);
   try {
-    if (!process.env.AWS_BUCKET_NAME) {
-      throw new Error("AWS_BUCKET_NAME environment variable is not defined");
+    if (!process.env.AWS_S3_BUCKET_NAME) {
+      throw new Error("AWS_S3_BUCKET_NAME environment variable is not defined");
     }
 
     if (!file.buffer || !file.originalname) {
@@ -28,7 +28,7 @@ export const uploadToS3 = async (
 
     const key = `visa-documents/${Date.now()}-${file.originalname}`;
     const command = new PutObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
@@ -36,7 +36,7 @@ export const uploadToS3 = async (
     });
 
     await s3Client.send(command);
-    return `https://${process.env.AWS_BUCKET_NAME}.s3.${
+    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${
       process.env.AWS_REGION || "us-east-1"
     }.amazonaws.com/${key}`;
   } catch (error) {

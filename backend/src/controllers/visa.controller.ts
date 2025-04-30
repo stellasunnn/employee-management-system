@@ -58,6 +58,7 @@ export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
     //   return res.status(400).json({ message: "No file uploaded" });
     // }
 
+    console.log("req.file", req.file);
     if (!req.user?._id) {
       return res.status(401).json({ message: "User not authenticated" });
     }
@@ -95,7 +96,7 @@ export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
 
     let fileUrl;
     // try {
-    //   fileUrl = await uploadToS3(req.file);
+    //   fileUrl = await uploadToS3(req.file!);
     //   console.log("fileUrl", fileUrl);
     // } catch (error) {
     //   console.error("Error uploading file to S3:", error);
