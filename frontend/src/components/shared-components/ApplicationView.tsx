@@ -5,9 +5,16 @@ import { OnboardingFormData } from '../onboarding/schema';
 import { toast } from 'react-hot-toast';
 import { handleFilePreview, handleFileDownload } from '@/utils/fileHandlers';
 
+interface Document {
+  type: string;
+  fileName: string;
+  fileUrl: string;
+  uploadDate?: string;
+}
+
 export interface ApplicationViewProps {
   formData: OnboardingFormData;
-  documents: any[];
+  documents: Document[];
   isHRView?: boolean;
   isEmployeeProfile?: boolean;
   rejectionFeedback?: string;
@@ -39,6 +46,20 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
     } else {
       await handleFileDownload(fileUrl, fileName);
     }
+  };
+
+  // Group documents by type and get the most recent one for each type
+  const getLatestDocuments = (docs: Document[]) => {
+    return docs.reduce((acc, doc) => {
+      if (!doc.uploadDate) return acc;
+      
+      const existingDoc = acc.get(doc.type);
+      if (!existingDoc || 
+          (existingDoc.uploadDate && new Date(doc.uploadDate) > new Date(existingDoc.uploadDate))) {
+        acc.set(doc.type, doc);
+      }
+      return acc;
+    }, new Map<string, Document>());
   };
 
   return (
@@ -230,11 +251,16 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
           <h2 className="text-lg font-semibold mb-4">Documents</h2>
           {documents && documents.length > 0 ? (
             <div className="space-y-3">
-              {documents.map((doc, index) => (
+              {Array.from(getLatestDocuments(documents).values()).map((doc, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded">
                   <div>
                     <p className="font-medium">{doc.type.replace(/_/g, ' ')}</p>
                     <p className="text-sm text-gray-500">{doc.fileName}</p>
+                    {doc.uploadDate && (
+                      <p className="text-xs text-gray-400">
+                        Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                   <div className="space-x-2">
                     <Button variant="outline" size="sm" onClick={() => handlePreviewClick(doc.fileUrl)}>
