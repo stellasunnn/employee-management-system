@@ -80,29 +80,6 @@ export const createOnboardingApplication = async (req: AuthRequest, res: Respons
   }
 }
 
-export const uploadDocument = async (req: AuthRequest, res: Response) => {
-    try {
-      const { type, fileName, fileUrl } = req.body;
-      
-      const application = await OnboardingApplication.findOne({ userId: req.user?._id });
-      if (!application) {
-        return res.status(404).json({ message: "Application not found" });
-      }
-  
-      application.documents.push({
-        type,
-        fileName,
-        fileUrl,
-        uploadDate: new Date()
-      });
-  
-      await application.save();
-      res.json(application);
-    } catch (error) {
-      res.status(500).json({ message: "Server error" });
-    }
-  };
-
   // Admin: Update application status
 export const updateApplicationStatus = async (req: AuthRequest, res: Response) => {
     try {

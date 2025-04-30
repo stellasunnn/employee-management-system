@@ -64,71 +64,24 @@ export const updatePersonalInfo = async (req: AuthRequest, res: Response) => {
 };
 
 // Update profile picture
-export const updateProfilePicture = async (req: AuthRequest, res: Response) => {
-    try {
-        const { profilePicture } = req.body;
-        if (!profilePicture) {
-            return res.status(400).json({ message: "Profile picture is required" });
-        }
-
-        const application = await OnboardingApplication.findOne({ userId: req.user?.id });
-        if (!application) {
-            return res.status(404).json({ message: "Application not found" });
-        }
-
-        application.profilePicture = profilePicture;
-        application.updatedAt = new Date();
-        await application.save();
-
-        res.status(200).json(application);
-    } catch (error) {
-        res.status(500).json({ message: "Error updating profile picture" });
-    }
-};
-
-// Get document by type
-// export const getDocument = async (req: AuthRequest, res: Response) => {
+// export const updateProfilePicture = async (req: AuthRequest, res: Response) => {
 //     try {
-//         const { type } = req.params;
+//         const { profilePicture } = req.body;
+//         if (!profilePicture) {
+//             return res.status(400).json({ message: "Profile picture is required" });
+//         }
+
 //         const application = await OnboardingApplication.findOne({ userId: req.user?.id });
-        
 //         if (!application) {
 //             return res.status(404).json({ message: "Application not found" });
 //         }
 
-//         const document = application.documents.find(doc => doc.type === type);
-//         if (!document) {
-//             return res.status(404).json({ message: "Document not found" });
-//         }
+//         application.profilePicture = profilePicture;
+//         application.updatedAt = new Date();
+//         await application.save();
 
-//         res.status(200).json(document);
+//         res.status(200).json(application);
 //     } catch (error) {
-//         res.status(500).json({ message: "Error fetching document" });
+//         res.status(500).json({ message: "Error updating profile picture" });
 //     }
 // };
-
-// Download document
-// export const downloadDocument = async (req: AuthRequest, res: Response) => {
-//     try {
-//         const { type } = req.params;
-//         const application = await OnboardingApplication.findOne({ userId: req.user?.id });
-        
-//         if (!application) {
-//             return res.status(404).json({ message: "Application not found" });
-//         }
-
-//         const document = application.documents.find(doc => doc.type === type);
-//         if (!document) {
-//             return res.status(404).json({ message: "Document not found" });
-//         }
-
-//         // Set headers for file download
-//         res.setHeader('Content-Disposition', `attachment; filename=${document.fileName}`);
-//         res.setHeader('Content-Type', 'application/octet-stream');
-
-//         // Redirect to the file URL
-//         res.redirect(document.fileUrl);
-//     } catch (error) {
-//         res.status(500).json({ message: "Error downloading document" });
-//     }
-// }; 

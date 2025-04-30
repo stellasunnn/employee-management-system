@@ -3,9 +3,7 @@ import { auth } from "../middleware/auth.middleware";
 import {
   getPersonalInfo,
   updatePersonalInfo,
-  updateProfilePicture,
-//   getDocument,
-//   downloadDocument
+//   updateProfilePicture,
 } from "../controllers/personal.controller";
 
 const router = express.Router();
@@ -16,8 +14,6 @@ router.use(auth);
 // Personal information routes
 router.get("/", getPersonalInfo);
 router.put("/", updatePersonalInfo);
-router.put("/profile-picture", updateProfilePicture);
-// router.get("/document/:type", getDocument);
-// router.get("/document/:type/download", downloadDocument);
+// router.put("/profile-picture", updateProfilePicture);
 
 export default router;
