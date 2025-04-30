@@ -231,7 +231,7 @@ export default function OnboardingFormTwo({
 
   async function onSubmit(values: z.infer<typeof pageTwoSchema>) {
     try {
-      if (!tempUploads.some(doc => doc.type === DocumentType.DriverLicense)) {
+      if (!tempUploads.some(doc => doc.type === DocumentType.DriverLicense) && !formData.documents?.some(doc => doc.type === DocumentType.DriverLicense)) {
         form.setError("documents", { message: "Driver's license is required" });
         return;
       }
@@ -239,7 +239,7 @@ export default function OnboardingFormTwo({
       const workAuthType = values.citizenshipStatus?.workAuthorizationType
 
       const isF1Visa = workAuthType === WorkAuthorizationType.F1;
-      if (isF1Visa && !tempUploads.some(doc => doc.type === DocumentType.OPTReceipt)) {
+      if (isF1Visa && !tempUploads.some(doc => doc.type === DocumentType.OPTReceipt) && !formData.documents?.some(doc => doc.type === DocumentType.OPTReceipt) ) {
         form.setError("documents", { message: "OPT Receipt is required for F1 visa holders" });
         return;
       }
@@ -248,7 +248,7 @@ export default function OnboardingFormTwo({
       || workAuthType === WorkAuthorizationType.H4 
       || workAuthType === WorkAuthorizationType.L2 
       || workAuthType === WorkAuthorizationType.Other;
-      if (needWorkAuthorization && !tempUploads.some(doc => doc.type === DocumentType.WorkAuthorization)) {
+      if (needWorkAuthorization && !tempUploads.some(doc => doc.type === DocumentType.WorkAuthorization) && !formData.documents?.some(doc => doc.type === DocumentType.WorkAuthorization)) {
         form.setError("documents", { message: "Work authorization file is required" });
         return;
       }
