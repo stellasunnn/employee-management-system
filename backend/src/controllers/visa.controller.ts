@@ -54,11 +54,10 @@ export const getVisaStatus = async (req: AuthRequest, res: Response) => {
 // Upload visa document
 export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
   try {
-    // if (!req.file) {
-    //   return res.status(400).json({ message: "No file uploaded" });
-    // }
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
-    console.log("req.file", req.file);
     if (!req.user?._id) {
       return res.status(401).json({ message: "User not authenticated" });
     }
@@ -95,16 +94,16 @@ export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
     }
 
     let fileUrl;
-    // try {
-    //   fileUrl = await uploadToS3(req.file!);
-    //   console.log("fileUrl", fileUrl);
-    // } catch (error) {
-    //   console.error("Error uploading file to S3:", error);
-    //   return res.status(500).json({ message: "Failed to upload document" });
-    // }
+    
+    try {
+      fileUrl = await uploadToS3(req.file!);
+    } catch (error) {
+      console.error("Error uploading file to S3:", error);
+      return res.status(500).json({ message: "Failed to upload document" });
+    }
     // Use static S3 URL instead of uploading
-    fileUrl =
-      "https://onboarding-synnie.s3.us-west-1.amazonaws.com/download.jpeg";
+    // fileUrl =
+    //   "https://onboarding-synnie.s3.us-west-1.amazonaws.com/download.jpeg";
 
     try {
       visa.documents.push({
