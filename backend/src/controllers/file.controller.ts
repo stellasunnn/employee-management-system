@@ -103,15 +103,35 @@ export const downloadFile = async (req: AuthRequest, res: Response) => {
   try {
     const { filename } = req.params;
     
-    // Generate a pre-signed URL for download (valid for 1 hour)
-    const fileUrl = await getSignedUrl(s3Client, new GetObjectCommand({
+    // Get the object from S3
+    const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
       Key: filename
-    }), { expiresIn: 3600 });
+    });
 
-    res.json({ url: fileUrl });
+    try {
+      const response = await s3Client.send(command);
+      
+      // Set headers for file download
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', response.ContentType || 'application/octet-stream');
+      
+      // Stream the file to the response
+      if (response.Body) {
+        // @ts-ignore - TypeScript doesn't recognize Readable
+        response.Body.pipe(res);
+      } else {
+        res.status(404).json({ message: "File content not found" });
+      }
+    } catch (err: any) {
+      if (err?.name === 'NoSuchKey') {
+        res.status(404).json({ message: "File not found" });
+      } else {
+        throw err;
+      }
+    }
   } catch (error) {
-    console.error(error);
+    console.error('Download error:', error);
     res.status(500).json({ message: "Server error" });
   }
 }; 
