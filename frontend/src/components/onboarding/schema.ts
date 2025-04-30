@@ -105,11 +105,15 @@ export const fullFormSchema = z.object({
     workAuthorizationOther: z.string().optional(),
     startDate: z.union([
       z.string().datetime({ message: 'Start date must be a valid date.' }),
-      z.literal('')
+      z.literal(''),
+      z.literal(null),
+      z.literal(undefined)
     ]),
     expirationDate: z.union([
       z.string().datetime({ message: 'Expiration date must be a valid date.' }),
-      z.literal('')
+      z.literal(''),
+      z.literal(null),
+      z.literal(undefined)
     ])
   }).superRefine((data, ctx) => {
     console.log(data.isPermanentResident)

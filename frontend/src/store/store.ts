@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import onboardingReducer from './slices/onboardingSlice';
 import visaReducer from './slices/visaSlice';
 import uploadDocumentReducer from './slices/uploadDocumentSlice';
+import hrReducer from './slices/hrSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     onboarding: onboardingReducer,
     uploadDocument: uploadDocumentReducer,
     visa: visaReducer,
+    hr: hrReducer,
   },
 });
 

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IRegistrationToken } from "../types/registration-token.types";
 import { sendEmail } from "../utils/email";
 import { RegistrationToken } from "../models/RegistrationToken";
+import { OnboardingApplication } from "../models/OnboardingApplication";
 
 export const generateToken = async (req: Request, res: Response) => {
   try {
@@ -61,3 +62,83 @@ export const getTokenHistory = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch token history" });
   }
 };
+
+export const getApplications = async (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+    
+    if (status) {
+      query = { status };
+    }
+    
+    const applications = await OnboardingApplication.find(query)
+      .sort({ createdAt: -1 });
+    
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({ error: "Failed to fetch applications" });
+  }
+};
+
+// Approve an application
+export const approveApplication = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const application = await OnboardingApplication.findByIdAndUpdate(
+      id,
+      {
+        status: "approved",
+      },
+      // { new: true }
+    );
+    
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+    
+    res.status(200).json({
+      message: "Application approved successfully",
+      application
+    });
+  } catch (error) {
+    console.error("Error approving application:", error);
+    res.status(500).json({ error: "Failed to approve application" });
+  }
+};
+
+// Reject an application with feedback
+export const rejectApplication = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { feedback } = req.body;
+    
+    if (!feedback || feedback.trim() === "") {
+      return res.status(400).json({ error: "Feedback is required for rejection" });
+    }
+    
+    const application = await OnboardingApplication.findByIdAndUpdate(
+      id,
+      {
+        status: "rejected",
+        rejectionFeedback: feedback,
+      },
+      // { new: true }
+    );
+    
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+    
+    res.status(200).json({
+      message: "Application rejected successfully",
+      application
+    });
+  } catch (error) {
+    console.error("Error rejecting application:", error);
+    res.status(500).json({ error: "Failed to reject application" });
+  }
+};
+
