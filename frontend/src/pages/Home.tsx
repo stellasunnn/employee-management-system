@@ -152,7 +152,10 @@ const Home = () => {
               ) : (
                 <ApplicationView
                   formData={formData}
-                  documents={documents}
+                  documents={documents.map(doc => ({
+                    ...doc,
+                    fileUrl: doc.fileUrl || '',
+                  }))}
                   onActionClick={{
                     onDocumentDownload: handleDocumentDownload,
                   }}

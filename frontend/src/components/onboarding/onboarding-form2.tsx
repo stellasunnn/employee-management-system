@@ -86,6 +86,18 @@ export default function OnboardingFormTwo({
 
   const [workAuthType, setWorkAuthType] = useState(form.getValues().citizenshipStatus?.workAuthorizationType || '');
 
+  // Handle back (to page 1)
+  const handleBack = () => {
+    const values = form.getValues();
+    dispatch(
+      updateFormData({
+        ...formData,
+        ...values,
+      }),
+    );
+    dispatch(setCurrentStep(1));
+  };
+
   useEffect(() => {
     const formValues = form.watch();
 
@@ -126,12 +138,15 @@ export default function OnboardingFormTwo({
   useEffect(() => {
     if (isResubmission && dataToUse?.documents) {
       console.log('Resubmission mode, setting up existing documents:', dataToUse.documents);
-      
+
       // Set document previews from existing documents
-      const previews = dataToUse.documents.reduce((acc, doc) => ({
-        ...acc,
-        [doc.type]: doc.fileName
-      }), {});
+      const previews = dataToUse.documents.reduce(
+        (acc, doc) => ({
+          ...acc,
+          [doc.type]: doc.fileName,
+        }),
+        {},
+      );
 
       console.log('Setting document previews:', previews);
       setDocumentPreviews(previews);
@@ -145,24 +160,25 @@ export default function OnboardingFormTwo({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
-      
+
       // Clean up previous temporary file of the same type
-      const previousUpload = tempUploads.find(upload => upload.type === type);
+      const previousUpload = tempUploads.find((upload) => upload.type === type);
       if (previousUpload) {
         URL.revokeObjectURL(previousUpload.previewUrl);
       }
-      
+
+
       // Create a temporary URL for preview
       const previewUrl = URL.createObjectURL(file);
-      
+
       // Remove previous upload of the same type and add new one
-      setTempUploads(prev => [
-        ...prev.filter(upload => upload.type !== type),
+      setTempUploads((prev) => [
+        ...prev.filter((upload) => upload.type !== type),
         {
           file,
           type,
-          previewUrl
-        }
+          previewUrl,
+        },
       ]);
 
       // Update document preview
@@ -170,7 +186,7 @@ export default function OnboardingFormTwo({
         ...prev,
         [type]: file.name,
       }));
-
+      
       toast.success('File selected successfully');
     }
   };
@@ -178,7 +194,7 @@ export default function OnboardingFormTwo({
   // Upload files to S3 and return document info
   const uploadFilesToS3 = async (files: TempFileUpload[]): Promise<any[]> => {
     const uploadedDocs = [];
-    
+
     for (const { file, type } of files) {
       const formData = new FormData();
       formData.append('file', file);
@@ -215,32 +231,50 @@ export default function OnboardingFormTwo({
 
   async function onSubmit(values: z.infer<typeof pageTwoSchema>) {
     try {
+      if (!tempUploads.some(doc => doc.type === DocumentType.DriverLicense)) {
+        form.setError("documents", { message: "Driver's license is required" });
+        return;
+      }
+
+      const workAuthType = values.citizenshipStatus?.workAuthorizationType
+
+      const isF1Visa = workAuthType === WorkAuthorizationType.F1;
+      if (isF1Visa && !tempUploads.some(doc => doc.type === DocumentType.OPTReceipt)) {
+        form.setError("documents", { message: "OPT Receipt is required for F1 visa holders" });
+        return;
+      }
+
+      const needWorkAuthorization = workAuthType === WorkAuthorizationType.H1B 
+      || workAuthType === WorkAuthorizationType.H4 
+      || workAuthType === WorkAuthorizationType.L2 
+      || workAuthType === WorkAuthorizationType.Other;
+      if (needWorkAuthorization && !tempUploads.some(doc => doc.type === DocumentType.WorkAuthorization)) {
+        form.setError("documents", { message: "Work authorization file is required" });
+        return;
+      }
+      
       // Upload all temporary files to S3
       const uploadedDocs = await uploadFilesToS3(tempUploads);
 
-      const allDocuments = [
-        ...(formData.documents || []),
-        ...(values.documents || []),
-        ...uploadedDocs
-      ].filter((doc, index, self) => 
-        index === self.findIndex(d => d.fileUrl === doc.fileUrl)
+      const allDocuments = [...(formData.documents || []), ...(values.documents || []), ...uploadedDocs].filter(
+        (doc, index, self) => index === self.findIndex((d) => d.fileUrl === doc.fileUrl),
       );
-      
+
       const completeData = {
         ...formData,
         ...values,
         documents: allDocuments,
         status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus,
       };
-    
+
       dispatch(updateFormData(completeData));
       console.log('Submitting combined data:', completeData);
       console.log('Resubmission: ', isResubmission);
-    
+
       dispatch(submitOnboardingForm(completeData));
 
       // Clean up temporary URLs
-      tempUploads.forEach(upload => URL.revokeObjectURL(upload.previewUrl));
+      tempUploads.forEach((upload) => URL.revokeObjectURL(upload.previewUrl));
       setTempUploads([]);
     } catch (error) {
       console.error('Form submission failed:', error);
@@ -251,21 +285,9 @@ export default function OnboardingFormTwo({
   // Clean up temporary URLs when component unmounts
   useEffect(() => {
     return () => {
-      tempUploads.forEach(upload => URL.revokeObjectURL(upload.previewUrl));
+      tempUploads.forEach((upload) => URL.revokeObjectURL(upload.previewUrl));
     };
   }, [tempUploads]);
-
-  // Handle back (to page 1)
-  const handleBack = () => {
-    const values = form.getValues();
-    dispatch(
-      updateFormData({
-        ...formData,
-        ...values,
-      }),
-    );
-    dispatch(setCurrentStep(1));
-  };
 
   useEffect(() => {
     if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
@@ -432,7 +454,7 @@ export default function OnboardingFormTwo({
                         </label>
                       </Button>
                       <span className="ml-3 text-sm">
-                        {documentPreviews[DocumentType.OPTReceipt] || "No file chosen"}
+                        {documentPreviews[DocumentType.OPTReceipt] || 'No file chosen'}
                       </span>
                     </div>
                   </div>
@@ -768,6 +790,13 @@ export default function OnboardingFormTwo({
           {/* Document Uploads */}
           <div className="space-y-4 mt-8">
             <h3 className="text-lg font-semibold">Required Documents</h3>
+            {form.formState.errors.documents && (
+    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+      <p className="text-red-500 text-sm">
+        {form.formState.errors.documents.message}
+      </p>
+    </div>
+  )}
             {isResubmission && (
               <div className="mb-4 p-4 bg-blue-50 rounded">
                 <p className="text-sm text-blue-600">
@@ -791,8 +820,8 @@ export default function OnboardingFormTwo({
                   </label>
                 </Button>
                 <span className="ml-3 text-sm">
-                  {documentPreviews[DocumentType.DriverLicense] || "No file chosen"}
-                </span>
+                    {documentPreviews[DocumentType.DriverLicense] || 'No file chosen'}
+                  </span>
               </div>
             </div>
 
@@ -812,7 +841,7 @@ export default function OnboardingFormTwo({
                     </label>
                   </Button>
                   <span className="ml-3 text-sm">
-                    {documentPreviews[DocumentType.WorkAuthorization] || "No file chosen"}
+                    {documentPreviews[DocumentType.WorkAuthorization] || 'No file chosen'}
                   </span>
                 </div>
               </div>
@@ -833,9 +862,7 @@ export default function OnboardingFormTwo({
                       />
                     </label>
                   </Button>
-                  <span className="ml-3 text-sm">
-                    {documentPreviews[DocumentType.OPTReceipt] || "No file chosen"}
-                  </span>
+                  <span className="ml-3 text-sm">{documentPreviews[DocumentType.OPTReceipt] || 'No file chosen'}</span>
                 </div>
               </div>
             )}
