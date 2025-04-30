@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { loadUser, logout } from '../store/slices/authSlice';
 import { RootState, AppDispatch } from '../store/store';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
 import OnboardingFormOne from '../components/onboarding/onboarding-form1';
 import OnboardingFormTwo from '../components/onboarding/onboarding-form2';
 import ApplicationView from '@/components/shared-components/ApplicationView';
+import { ApplicationStatus } from '@/components/onboarding/schema';
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -29,6 +30,7 @@ const Home = () => {
   const { user, loading } = useSelector((state: RootState) => state.auth);
   const applicationStatus = useSelector(selectApplicationStatus);
   const onboardingStatus = useSelector(selectOnboardingStatus);
+  const onboardingError = useSelector(selectOnboardingError);
   const requestFromHomeState = useSelector(selectRequestFromHomeState);
   const formData = useSelector(selectOnboardingData);
   const documents = useSelector(selectDocuments) || [];
@@ -65,6 +67,11 @@ const Home = () => {
 
   if (!user) {
     return null;
+  }
+
+  // Redirect to onboarding if no application is found or if application is pending
+  if (onboardingError === 'Onboarding application not found' || applicationStatus === ApplicationStatus.Pending) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   const handleSave = () => {

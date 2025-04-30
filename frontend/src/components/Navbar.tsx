@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
+import { selectOnboardingError, selectApplicationStatus } from '../store/slices/onboardingSlice';
+import { ApplicationStatus } from '../components/onboarding/schema';
 
 interface NavbarProps {
   onLogout: () => void;
@@ -9,6 +11,8 @@ interface NavbarProps {
 
 const Navbar = ({ onLogout }: NavbarProps) => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const onboardingError = useSelector(selectOnboardingError);
+  const applicationStatus = useSelector(selectApplicationStatus);
 
   const renderNavItems = () => {
     if (!user) return null;
@@ -39,12 +43,17 @@ const Navbar = ({ onLogout }: NavbarProps) => {
     } else {
       return (
         <>
-          <Link to="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-            Home
-          </Link>
-          <Link to="/visa" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
-            Visa Status
-          </Link>
+          {onboardingError !== 'Onboarding application not found' &&
+            applicationStatus !== ApplicationStatus.Pending && (
+              <>
+                <Link to="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+                  Home
+                </Link>
+                <Link to="/visa" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+                  Visa Status
+                </Link>
+              </>
+            )}
           <Link to="/onboarding" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
             Onboarding
           </Link>

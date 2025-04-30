@@ -97,6 +97,15 @@ export const fetchApplicationData = createAsyncThunk('onboarding/fetchData', asy
   }
 });
 
+export const fetchApplicationStatus = createAsyncThunk('onboarding/fetchStatus', async (_, { rejectWithValue }) => {
+  try {
+    const response = await onboardingApi.fetchApplicationStatus();
+    return response.data;
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data?.message || 'Failed to fetch application status');
+  }
+});
+
 export const resubmitApplication = createAsyncThunk('onboarding/resubmit', async (formData, { rejectWithValue }) => {
   try {
     const response = await onboardingApi.resubmitApplication(formData);

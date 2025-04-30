@@ -18,6 +18,9 @@ const onboardingApi = {
   fetchApplicationData: async () => {
     return api.get('/onboarding/application');
   },
+  fetchApplicationStatus: async () => {
+    return api.get('/onboarding/application/status');
+  },
   saveOnboardingDraft: async (data: any) => {
     return api.post('/onboarding/draft', data);
   },

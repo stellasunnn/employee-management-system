@@ -17,7 +17,7 @@ export const getOnboardingApplication = async (req: AuthRequest, res: Response) 
 
 export const getOnboardingApplicationStatus = async (req: AuthRequest, res: Response) => {
   try {
-      const application = await OnboardingApplication.findOne({ userId: req.user?.id });
+      const application = await OnboardingApplication.findOne({ userId: req.user?._id });
       if (!application) {
           return res.status(404).json({ message: "Onboarding application status not found" });
       }

@@ -17,6 +17,9 @@ import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Loader2, Upload, Download } from 'lucide-react';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { Navigate } from 'react-router-dom';
+import { selectApplicationStatus, fetchApplicationData } from '../store/slices/onboardingSlice';
+import { ApplicationStatus } from '../components/onboarding/schema';
 
 const VisaStatusContent = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,12 +27,19 @@ const VisaStatusContent = () => {
   const currentStep = useSelector(selectVisaCurrentStep);
   const error = useSelector(selectVisaError);
   const alert = useSelector(selectVisaMessage);
+  const applicationStatus = useSelector(selectApplicationStatus);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingType, setUploadingType] = useState<DocumentType | null>(null);
 
   useEffect(() => {
+    dispatch(fetchApplicationData());
     dispatch(loadVisaDocuments());
   }, [dispatch]);
+
+  // Redirect to onboarding if application is pending
+  if (applicationStatus === ApplicationStatus.Pending) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
