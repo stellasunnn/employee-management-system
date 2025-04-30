@@ -127,14 +127,24 @@ export default function OnboardingFormTwo({
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       
+      // Clean up previous temporary file of the same type
+      const previousUpload = tempUploads.find(upload => upload.type === type);
+      if (previousUpload) {
+        URL.revokeObjectURL(previousUpload.previewUrl);
+      }
+      
       // Create a temporary URL for preview
       const previewUrl = URL.createObjectURL(file);
       
-      setTempUploads(prev => [...prev, {
-        file,
-        type,
-        previewUrl
-      }]);
+      // Remove previous upload of the same type and add new one
+      setTempUploads(prev => [
+        ...prev.filter(upload => upload.type !== type),
+        {
+          file,
+          type,
+          previewUrl
+        }
+      ]);
 
       // Update document preview
       setDocumentPreviews((prev) => ({
