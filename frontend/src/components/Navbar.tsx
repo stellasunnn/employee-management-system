@@ -20,7 +20,7 @@ const Navbar = ({ onLogout }: NavbarProps) => {
     if (user.isAdmin) {
       return (
         <>
-          <Link to="/hr/home" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+          <Link to="/" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
             Home
           </Link>
           <Link
@@ -54,9 +54,9 @@ const Navbar = ({ onLogout }: NavbarProps) => {
                 </Link>
               </>
             )}
-          <Link to="/onboarding" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
+          {applicationStatus !== ApplicationStatus.Approved && (<Link to="/onboarding" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900">
             Onboarding
-          </Link>
+          </Link>)}
         </>
       );
     }

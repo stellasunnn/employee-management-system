@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -10,7 +10,7 @@ import HiringManagement from './pages/HiringManagement';
 import HRVisaManagement from './pages/HRVisaManagement';
 import EmployeeProfiles from './pages/EmployeeProfiles';
 import { useEffect } from 'react';
-import { loadUser } from './store/slices/authSlice';
+import { loadUser, logout } from './store/slices/authSlice';
 import Navbar from './components/Navbar';
 import { RootState } from './store/store';
 import { Toaster } from 'react-hot-toast';
@@ -19,10 +19,10 @@ import HrHome from './pages/HrHome';
 
 const AppContent = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    dispatch(logout());
     window.location.href = '/login';
   };
 

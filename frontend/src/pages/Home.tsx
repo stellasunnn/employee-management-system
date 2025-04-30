@@ -72,7 +72,7 @@ const Home = () => {
   
 
   // Redirect to onboarding if no application is found or if application is pending
-  if (onboardingError === 'Onboarding application not found' || applicationStatus !== ApplicationStatus.Approved) {
+  if ( !user.isAdmin && (onboardingError === 'Onboarding application not found' || applicationStatus !== ApplicationStatus.Approved)) {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -98,6 +98,13 @@ const Home = () => {
           {applicationStatus === 'approved' && (
             <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
               <p className="font-bold">Your onboarding application is approved</p>
+            </div>
+          )}
+          {user.isAdmin && (
+            <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+              <div className="w-full max-w-sm">
+                <h1 className="text-2xl font-bold">Welcome to the HR dashboard!</h1>
+              </div>
             </div>
           )}
           {applicationStatus !== 'approved' && (
