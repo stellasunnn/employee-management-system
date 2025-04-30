@@ -307,12 +307,7 @@ const Home = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  const link = document.createElement('a');
-                                  // link.href = doc.fileUrl;
-                                  link.download = doc.fileName;
-                                  link.click();
-                                }}
+                                onClick={() => window.open(doc.fileUrl, '_blank')}
                               >
                                 Download
                               </Button>
