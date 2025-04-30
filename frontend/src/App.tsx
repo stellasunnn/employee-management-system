@@ -15,6 +15,7 @@ import Navbar from './components/Navbar';
 import { RootState } from './store/store';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
+import HrHome from './pages/HrHome';
 
 const AppContent = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -37,6 +38,15 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr/home"
+          element={
+            <ProtectedRoute>
+              <HrHome />
             </ProtectedRoute>
           }
         />

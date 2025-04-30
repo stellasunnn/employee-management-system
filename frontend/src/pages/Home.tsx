@@ -41,6 +41,7 @@ const Home = () => {
     dispatch(loadUser());
   }, [dispatch]);
 
+
   useEffect(() => {
     dispatch(fetchApplicationData());
   }, [dispatch, applicationStatus]);
@@ -68,6 +69,7 @@ const Home = () => {
   if (!user) {
     return null;
   }
+  
 
   // Redirect to onboarding if no application is found or if application is pending
   if (onboardingError === 'Onboarding application not found' || applicationStatus !== ApplicationStatus.Approved) {
@@ -88,7 +90,7 @@ const Home = () => {
     link.download = fileName;
     link.click();
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
