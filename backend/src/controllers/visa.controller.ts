@@ -94,7 +94,7 @@ export const uploadVisaDocument = async (req: AuthRequest, res: Response) => {
     }
 
     let fileUrl;
-    
+
     try {
       fileUrl = await uploadToS3(req.file!);
     } catch (error) {
@@ -200,13 +200,13 @@ export const getInProgressVisaApplications = async (
 ) => {
   try {
     const visas = await Visa.aggregate([
-      // 1. 先筛出有用户的申请
+      // 1. Match visas with users
       {
         $match: {
           user: { $exists: true },
         },
       },
-      // 2. 找到最后一个 document（按上传时间）
+      // 2. Find last document and I-20 document
       {
         $addFields: {
           lastDocument: { $arrayElemAt: ["$documents", -1] },
@@ -221,19 +221,18 @@ export const getInProgressVisaApplications = async (
           },
         },
       },
-      // 3. 应用 in-progress 逻辑
+      // 3. Apply in-progress logic
       {
         $match: {
           $or: [
-            { currentStep: { $ne: "I_20" } }, // 流程还没走完
-            { documents: { $size: 0 } }, // 还没提交任何材料
-            { "lastDocument.type": { $ne: "I_20" } }, // 最后一个不是 I_20
-            { "lastI20Doc.status": { $ne: "APPROVED" } }, // I_20 还没通过
+            { currentStep: { $ne: "I_20" } },
+            { documents: { $size: 0 } },
+            { "lastDocument.type": { $ne: "I_20" } },
+            { "lastI20Doc.status": { $ne: "APPROVED" } },
           ],
         },
       },
-      // 4. 如果你想带出 user 的 name/email，需要再 $lookup 或用 .populate in Mongoose
-      // 4. Join with users collection to get username and email
+      // 4. Join with users collection
       {
         $lookup: {
           from: "users",
@@ -242,11 +241,79 @@ export const getInProgressVisaApplications = async (
           as: "user",
         },
       },
-      // 5. Unwind the user array created by lookup
+      // 5. Unwind user array
       {
         $unwind: "$user",
       },
-      // 6. Project only needed fields
+      // 6. Join with onboardingapplications collection
+      {
+        $lookup: {
+          from: "onboardingapplications",
+          let: { userId: "$user._id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$userId"],
+                },
+              },
+            },
+          ],
+          as: "onboarding",
+        },
+      },
+      // 7. Add a field to check if onboarding exists
+      {
+        $addFields: {
+          hasOnboarding: { $gt: [{ $size: "$onboarding" }, 0] },
+        },
+      },
+      // 8. Unwind onboarding array with preserveNullAndEmptyArrays
+      {
+        $unwind: {
+          path: "$onboarding",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // 9. Add calculated fields
+      {
+        $addFields: {
+          "user.username": {
+            $cond: {
+              if: "$hasOnboarding",
+              then: {
+                $concat: ["$onboarding.firstName", " ", "$onboarding.lastName"],
+              },
+              else: "$user.username",
+            },
+          },
+          workAuthorization: {
+            $cond: {
+              if: "$hasOnboarding",
+              then: {
+                title: "$onboarding.citizenshipStatus.workAuthorizationType",
+                startDate: "$onboarding.citizenshipStatus.startDate",
+                endDate: "$onboarding.citizenshipStatus.expirationDate",
+                daysRemaining: {
+                  $floor: {
+                    $divide: [
+                      {
+                        $subtract: [
+                          "$onboarding.citizenshipStatus.expirationDate",
+                          new Date(),
+                        ],
+                      },
+                      1000 * 60 * 60 * 24,
+                    ],
+                  },
+                },
+              },
+              else: null,
+            },
+          },
+        },
+      },
+      // 10. Project only needed fields
       {
         $project: {
           _id: 1,
@@ -265,6 +332,7 @@ export const getInProgressVisaApplications = async (
 
     res.json(visas);
   } catch (error) {
+    console.error("Error in getInProgressVisaApplications:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -272,9 +340,129 @@ export const getInProgressVisaApplications = async (
 // Get all visa applications for HR
 export const getAllVisaApplications = async (req: Request, res: Response) => {
   try {
-    const visas = await Visa.find().populate("user", "username email");
+    const visas = await Visa.aggregate([
+      // 1. Match visas with users
+      {
+        $match: {
+          user: { $exists: true },
+        },
+      },
+      // 2. Find last document and I-20 document
+      {
+        $addFields: {
+          lastDocument: { $arrayElemAt: ["$documents", -1] },
+          lastI20Doc: {
+            $last: {
+              $filter: {
+                input: "$documents",
+                as: "doc",
+                cond: { $eq: ["$$doc.type", "I_20"] },
+              },
+            },
+          },
+        },
+      },
+      // 3. Join with users collection
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      // 4. Unwind user array
+      {
+        $unwind: "$user",
+      },
+      // 5. Join with onboardingapplications collection
+      {
+        $lookup: {
+          from: "onboardingapplications",
+          let: { userId: "$user._id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$userId", "$$userId"],
+                },
+              },
+            },
+          ],
+          as: "onboarding",
+        },
+      },
+      // 6. Add a field to check if onboarding exists
+      {
+        $addFields: {
+          hasOnboarding: { $gt: [{ $size: "$onboarding" }, 0] },
+        },
+      },
+      // 7. Unwind onboarding array with preserveNullAndEmptyArrays
+      {
+        $unwind: {
+          path: "$onboarding",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // 8. Add calculated fields
+      {
+        $addFields: {
+          "user.username": {
+            $cond: {
+              if: "$hasOnboarding",
+              then: {
+                $concat: ["$onboarding.firstName", " ", "$onboarding.lastName"],
+              },
+              else: "$user.username",
+            },
+          },
+          workAuthorization: {
+            $cond: {
+              if: "$hasOnboarding",
+              then: {
+                title: "$onboarding.citizenshipStatus.workAuthorizationType",
+                startDate: "$onboarding.citizenshipStatus.startDate",
+                endDate: "$onboarding.citizenshipStatus.expirationDate",
+                daysRemaining: {
+                  $floor: {
+                    $divide: [
+                      {
+                        $subtract: [
+                          "$onboarding.citizenshipStatus.expirationDate",
+                          new Date(),
+                        ],
+                      },
+                      1000 * 60 * 60 * 24,
+                    ],
+                  },
+                },
+              },
+              else: null,
+            },
+          },
+        },
+      },
+      // 9. Project only needed fields
+      {
+        $project: {
+          _id: 1,
+          currentStep: 1,
+          documents: 1,
+          lastDocument: 1,
+          workAuthorization: 1,
+          user: {
+            _id: "$user._id",
+            username: "$user.username",
+            email: "$user.email",
+          },
+        },
+      },
+    ]);
+
     res.json(visas);
   } catch (error) {
+    console.error("Error in getAllVisaApplications:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
