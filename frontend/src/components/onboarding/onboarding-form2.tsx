@@ -37,6 +37,13 @@ interface OnboardingFormTwoProps {
   isEditMode?: boolean;
   isResubmission?: boolean;
 }
+
+interface TempFileUpload {
+  file: File;
+  type: DocumentTypeValues;
+  previewUrl: string;
+}
+
 export default function OnboardingFormTwo({
   initialData,
   isEditMode = false,
@@ -54,6 +61,7 @@ export default function OnboardingFormTwo({
   const [documents, setDocuments] = useState<File[]>([]);
   const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
   const requestFromHomeState = useSelector(selectRequestFromHomeState);
+  const [tempUploads, setTempUploads] = useState<TempFileUpload[]>([]);
 
   const form = useForm<z.infer<typeof pageTwoSchema>>({
     resolver: zodResolver(pageTwoSchema),
@@ -114,53 +122,109 @@ export default function OnboardingFormTwo({
     }
   }, [form.watch('citizenshipStatus.isPermanentResident')]);
 
-  // Handle file upload
+  // Handle file selection
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
+      
+      // Create a temporary URL for preview
+      const previewUrl = URL.createObjectURL(file);
+      
+      setTempUploads(prev => [...prev, {
+        file,
+        type,
+        previewUrl
+      }]);
+
+      // Update document preview
+      setDocumentPreviews((prev) => ({
+        ...prev,
+        [type]: file.name,
+      }));
+
+      toast.success('File selected successfully');
+    }
+  };
+
+  // Upload files to S3 and return document info
+  const uploadFilesToS3 = async (files: TempFileUpload[]): Promise<any[]> => {
+    const uploadedDocs = [];
+    
+    for (const { file, type } of files) {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Use the new file upload endpoint
-      fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const currentDocuments = form.getValues().documents || [];
-
-          const newDocument = {
-            type: type,
-            fileName: data.fileName,
-            fileUrl: data.fileUrl,
-            // Convert Date to ISO string for Redux
-            uploadDate: data.uploadDate ? new Date(data.uploadDate).toISOString() : new Date().toISOString(),
-          };
-
-          dispatch(
-            updateFormData({
-              documents: [...currentDocuments, newDocument],
-            }),
-          );
-
-          // Update document preview
-          setDocumentPreviews((prev) => ({
-            ...prev,
-            [type]: data.fileName,
-          }));
-
-          toast.success('File uploaded successfully');
-        })
-        .catch((error) => {
-          console.error('Upload failed:', error);
-          toast.error('Failed to upload file');
+      try {
+        const response = await fetch('/api/files/upload', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+
+        const data = await response.json();
+        uploadedDocs.push({
+          type,
+          fileName: data.fileName,
+          fileUrl: data.fileUrl,
+          uploadDate: data.uploadDate ? new Date(data.uploadDate).toISOString() : new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('Upload failed:', error);
+        toast.error(`Failed to upload ${file.name}`);
+        throw error;
+      }
     }
+
+    return uploadedDocs;
   };
+
+  async function onSubmit(values: z.infer<typeof pageTwoSchema>) {
+    try {
+      // Upload all temporary files to S3
+      const uploadedDocs = await uploadFilesToS3(tempUploads);
+
+      const allDocuments = [
+        ...(formData.documents || []),
+        ...(values.documents || []),
+        ...uploadedDocs
+      ].filter((doc, index, self) => 
+        index === self.findIndex(d => d.fileUrl === doc.fileUrl)
+      );
+      
+      const completeData = {
+        ...formData,
+        ...values,
+        documents: allDocuments,
+        status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus,
+      };
+    
+      dispatch(updateFormData(completeData));
+      console.log('Submitting combined data:', completeData);
+      console.log('Resubmission: ', isResubmission);
+    
+      dispatch(submitOnboardingForm(completeData));
+
+      // Clean up temporary URLs
+      tempUploads.forEach(upload => URL.revokeObjectURL(upload.previewUrl));
+      setTempUploads([]);
+    } catch (error) {
+      console.error('Form submission failed:', error);
+      toast.error('Failed to submit form. Please try again.');
+    }
+  }
+
+  // Clean up temporary URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      tempUploads.forEach(upload => URL.revokeObjectURL(upload.previewUrl));
+    };
+  }, [tempUploads]);
 
   // Handle back (to page 1)
   const handleBack = () => {
@@ -173,28 +237,6 @@ export default function OnboardingFormTwo({
     );
     dispatch(setCurrentStep(1));
   };
-
-  function onSubmit(values: z.infer<typeof pageTwoSchema>) {
-    const allDocuments = [
-      ...(formData.documents || []),  
-      ...(values.documents || []) 
-    ].filter((doc, index, self) => 
-      index === self.findIndex(d => d.fileUrl === doc.fileUrl)
-    );
-    
-    const completeData = {
-      ...formData,
-      ...values,
-      documents: allDocuments, 
-      status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus,
-    };
-  
-    dispatch(updateFormData(completeData));
-    console.log('Submitting combined data:', completeData);
-    console.log('Resubmission: ', isResubmission);
-  
-    dispatch(submitOnboardingForm(completeData));
-  }
 
   useEffect(() => {
     if (status === 'failed' && applicationStatus !== ApplicationStatus.NeverSubmitted && error) {
