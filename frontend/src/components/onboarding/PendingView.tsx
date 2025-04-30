@@ -8,12 +8,12 @@ const PendingView: React.FC = () => {
   const documents = useSelector(selectDocuments) || []
   
   return (
+    <div className='w-full max-w-3xl mx-auto'>
+    <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+    <p className="font-bold">Application Under Review</p>
+    <p>Please wait for HR to review your application.</p>
+  </div>
     <div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
-      {/* Status Banner */}
-      <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
-        <p className="font-bold">Application Under Review</p>
-        <p>Please wait for HR to review your application.</p>
-      </div>
       
       {/* Personal Information */}
       <div className="mb-8">
@@ -140,7 +140,7 @@ const PendingView: React.FC = () => {
           <p>No documents uploaded</p>
         )}
       </div>
-    </div>
+    </div></div>
   );
 };
 

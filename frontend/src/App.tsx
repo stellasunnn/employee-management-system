@@ -8,6 +8,7 @@ import Onboarding from './pages/Onboarding';
 import VisaStatus from './pages/VisaStatus';
 import HiringManagement from './pages/HiringManagement';
 import HRVisaManagement from './pages/HRVisaManagement';
+import EmployeeProfiles from './pages/EmployeeProfiles';
 import { useEffect } from 'react';
 import { loadUser } from './store/slices/authSlice';
 import Navbar from './components/Navbar';
@@ -58,6 +59,15 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employee-profiles"
+          element={
+            <ProtectedRoute>
+              <EmployeeProfiles />
             </ProtectedRoute>
           }
         />
