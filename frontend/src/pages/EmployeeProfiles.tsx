@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from 'react';
+import React, { use, useEffect, useMemo, useState } from 'react';
 import ApplicationView from '@/components/shared-components/ApplicationView';
 import { useDispatch, useSelector } from 'react-redux';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,24 +42,50 @@ const EmployeeProfiles = () => {
     setViewOpen(true);
   };
 
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const sortedAndFilteredApplications = useMemo(() => {
+    const sorted = [...applications].sort((a, b) => a.lastName.localeCompare(b.lastName));
+    if (!searchTerm.trim()) return sorted;
+
+    const term = searchTerm.toLowerCase().trim();
+    return sorted.filter(
+      (app) =>
+        app.firstName.toLowerCase().includes(term) ||
+        app.lastName.toLowerCase().includes(term) ||
+        (app.preferredName && app.preferredName.toLowerCase().includes(term)),
+    );
+  }, [applications, searchTerm]);
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Employee Profiles</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            className="w-full p-2 border rounded-md"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
         {loading ? (
           <div className="flex justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : applications.length === 0 ? (
-          <p className="text-center py-6 text-gray-500">No employees.</p>
+        ) : sortedAndFilteredApplications.length === 0 ? (
+          <p className="text-center py-6 text-gray-500">
+            {searchTerm.trim() ? 'No employees match your search.' : 'No employees.'}
+          </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Full-Name</TableHead> 
+                <TableHead>Full-Name</TableHead>
                 <TableHead>SSN</TableHead>
                 <TableHead>Work-Authorization-Title</TableHead>
                 <TableHead>Phone-Number</TableHead>
@@ -67,13 +93,22 @@ const EmployeeProfiles = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {applications.map((app) => (
+              {sortedAndFilteredApplications.map((app) => (
                 <TableRow key={app._id}>
-                  <TableCell className="font-medium" onClick={() => handleViewApplication(app)}>
-                    {app.firstName} {app.lastName}
+                  <TableCell className="font-medium">
+                    <button
+                      className="text-primary bg-primary/10 px-3 py-1 rounded-md hover:bg-primary/20 transition-colors"
+                      onClick={() => handleViewApplication(app)}
+                    >
+                      {app.firstName} {app.lastName}
+                    </button>
                   </TableCell>
                   <TableCell>{app.ssn}</TableCell>
-                  <TableCell>{ app.citizenshipStatus.isPermanentResident ? "Green Card / Citizen" : app.citizenshipStatus.workAuthorizationType}</TableCell>
+                  <TableCell>
+                    {app.citizenshipStatus.isPermanentResident
+                      ? 'Green Card / Citizen'
+                      : app.citizenshipStatus.workAuthorizationType}
+                  </TableCell>
                   <TableCell>{app.cellPhone}</TableCell>
                   <TableCell>{app.email}</TableCell>
                 </TableRow>
@@ -98,7 +133,7 @@ const EmployeeProfiles = () => {
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {selectedApplication.firstName} {selectedApplication.lastName}'s Application
+                  {selectedApplication.firstName} {selectedApplication.lastName}'s Profile
                 </DialogTitle>
               </DialogHeader>
 
@@ -106,7 +141,8 @@ const EmployeeProfiles = () => {
                 <ApplicationView
                   formData={selectedApplication}
                   documents={selectedApplication.documents || []}
-                  isHRView={true}
+                  isHRView={false}
+                  isEmployeeProfile={true}
                   rejectionFeedback={selectedApplication.rejectionFeedback}
                 />
               </div>

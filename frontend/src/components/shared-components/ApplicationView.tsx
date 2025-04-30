@@ -9,6 +9,7 @@ export interface ApplicationViewProps {
   formData: OnboardingFormData;
   documents: any[];
   isHRView?: boolean;
+  isEmployeeProfile?: boolean;
   rejectionFeedback?: string;
   onActionClick?: {
     onDocumentPreview?: (url: string) => void;
@@ -20,6 +21,7 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
   formData,
   documents = [],
   isHRView = false,
+  isEmployeeProfile = false,
   rejectionFeedback,
   onActionClick,
 }) => {
@@ -81,21 +83,25 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
           </div>
           <div>
             <p className="text-sm text-gray-500">SSN</p>
-            <p>{formData.ssn?.replace(/\d(?=\d{4})/g, '*')}</p>
+            <p>{formData.ssn}</p>
           </div>
-          <div>
-            <p className="text-sm text-gray-500">Date of Birth</p>
-            <p>{new Date(formData.dateOfBirth).toLocaleDateString()}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Gender</p>
-            <p>{formData.gender?.replace('_', ' ')}</p>
-          </div>
+          {!isEmployeeProfile && (
+            <div>
+              <p className="text-sm text-gray-500">Date of Birth</p>
+              <p>{new Date(formData.dateOfBirth).toLocaleDateString()}</p>
+            </div>
+          )}
+
+          {!isEmployeeProfile && (
+            <div>
+              <p className="text-sm text-gray-500">Gender</p>
+              <p>{formData.gender?.replace('_', ' ')}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Address Section */}
-      {formData.address && (
+      {isEmployeeProfile === false && formData.address && (
         <div className="p-6 border rounded-lg bg-white shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Address</h2>
           <p>
@@ -125,7 +131,24 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
       </div>
 
       {/* Employment Section */}
-      {formData.citizenshipStatus && (
+
+      {isEmployeeProfile && formData.citizenshipStatus && (
+        <div className="p-6 border rounded-lg bg-white shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Visa Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              {' '}
+              <p>
+                {formData.citizenshipStatus.isPermanentResident
+                  ? `Permanent Resident (${formData.citizenshipStatus.type})`
+                  : `Work Authorization: ${formData.citizenshipStatus.workAuthorizationType}`}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isEmployeeProfile && formData.citizenshipStatus && (
         <div className="p-6 border rounded-lg bg-white shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Employment</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,12 +177,11 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
       )}
 
       {/* Reference Section */}
-      {formData.reference && (
+      {!isEmployeeProfile && formData.reference && (
         <div className="p-6 border rounded-lg bg-white shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Reference</h2>
           <p className="font-medium">
-            {formData.reference.firstName} {formData.reference.middleName || ''}{' '}
-            {formData.reference.lastName}
+            {formData.reference.firstName} {formData.reference.middleName || ''} {formData.reference.lastName}
           </p>
           <p className="text-sm mt-1">
             <span className="text-gray-500">Relationship: </span>
@@ -177,7 +199,7 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
       )}
 
       {/* Emergency Contacts Section */}
-      {formData.emergencyContacts && formData.emergencyContacts.length > 0 && (
+      {!isEmployeeProfile && formData.emergencyContacts && formData.emergencyContacts.length > 0 && (
         <div className="p-6 border rounded-lg bg-white shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Emergency Contacts</h2>
           {formData.emergencyContacts.map((contact, index) => (
@@ -203,44 +225,42 @@ const ApplicationView: React.FC<ApplicationViewProps> = ({
       )}
 
       {/* Documents Section */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Documents</h2>
-        {documents && documents.length > 0 ? (
-          <div className="space-y-3">
-            {documents.map((doc, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded">
-                <div>
-                  <p className="font-medium">{doc.type.replace(/_/g, ' ')}</p>
-                  <p className="text-sm text-gray-500">{doc.fileName}</p>
-                </div>
-                <div className="space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handlePreviewClick(doc.fileUrl)}
-                  >
-                    Preview
-                  </Button>
-                  {isHRView && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadClick(doc.fileUrl, doc.fileName)}
-                    >
-                      Download
+      {!isEmployeeProfile && (
+        <div className="p-6 border rounded-lg bg-white shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">Documents</h2>
+          {documents && documents.length > 0 ? (
+            <div className="space-y-3">
+              {documents.map((doc, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="font-medium">{doc.type.replace(/_/g, ' ')}</p>
+                    <p className="text-sm text-gray-500">{doc.fileName}</p>
+                  </div>
+                  <div className="space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => handlePreviewClick(doc.fileUrl)}>
+                      Preview
                     </Button>
-                  )}
+                    {isHRView && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownloadClick(doc.fileUrl, doc.fileName)}
+                      >
+                        Download
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No documents uploaded</p>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <p>No documents uploaded</p>
+          )}
+        </div>
+      )}
 
       {/* Rejection Feedback - Only show in HR view when available */}
-      {isHRView && rejectionFeedback && (
+      {!isEmployeeProfile && isHRView && rejectionFeedback && (
         <div className="p-6 border border-red-200 rounded-lg bg-red-50">
           <h2 className="text-lg font-semibold mb-2 text-red-700">Rejection Feedback</h2>
           <p>{rejectionFeedback}</p>
