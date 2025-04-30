@@ -140,33 +140,6 @@ export default function OnboardingFormTwo({
     }
   };
 
-  // Handle file download
-  const handleFileDownload = async (fileUrl: string, fileName: string) => {
-    try {
-      // If the URL is not a pre-signed URL, get a new one
-      if (!fileUrl.startsWith('https://')) {
-        const filename = fileUrl.split('/').pop();
-        const response = await fetch(`/api/files/download/${filename}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        const data = await response.json();
-        fileUrl = data.url;
-      }
-
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast.error('Failed to download file');
-    }
-  };
-
   // Handle back (to page 1)
   const handleBack = () => {
     const values = form.getValues();
