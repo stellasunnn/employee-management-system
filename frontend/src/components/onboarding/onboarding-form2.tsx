@@ -21,10 +21,10 @@ import {
   setCurrentStep,
   setRequestFromHomeState,
   selectRequestFromHomeState,
-  resubmitApplication
+  resubmitApplication,
 } from '@/store/slices/onboardingSlice';
 import { uploadDocument } from '@/store/slices/uploadDocumentSlice';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppDispatch } from '@/store/store';
 import { useNavigate } from 'react-router-dom';
 import { ApplicationStatus, pageTwoSchema, OnboardingFormData } from './schema';
@@ -38,9 +38,9 @@ interface OnboardingFormTwoProps {
   isResubmission?: boolean;
 }
 export default function OnboardingFormTwo({
-  initialData, 
+  initialData,
   isEditMode = false,
-  isResubmission = false
+  isResubmission = false,
 }: OnboardingFormTwoProps) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -50,16 +50,10 @@ export default function OnboardingFormTwo({
   const applicationStatus = useSelector(selectApplicationStatus);
   const currentStep = useSelector(selectCurrentStep);
   const dataToUse = initialData || formData;
-  const [isPermanentResident, setIsPermanentResident] = useState(
-    dataToUse.citizenshipStatus?.isPermanentResident || false,
-  );
-
-  const [workAuthType, setWorkAuthType] = useState<string>(dataToUse?.citizenshipStatus?.workAuthorizationType || '');
 
   const [documents, setDocuments] = useState<File[]>([]);
   const [documentPreviews, setDocumentPreviews] = useState<{ [key: string]: string }>({});
-  const requestFromHomeState = useSelector(selectRequestFromHomeState)
-
+  const requestFromHomeState = useSelector(selectRequestFromHomeState);
 
   const form = useForm<z.infer<typeof pageTwoSchema>>({
     resolver: zodResolver(pageTwoSchema),
@@ -78,19 +72,47 @@ export default function OnboardingFormTwo({
     },
   });
 
-  useEffect(() => {
-    if (formData && currentStep === 2) {
-      form.reset(formData);
-    }
-  }, [formData, form.reset, currentStep]);
+  const [isPermanentResident, setIsPermanentResident] = useState(
+    form.getValues().citizenshipStatus?.isPermanentResident || false,
+  );
+
+  const [workAuthType, setWorkAuthType] = useState(form.getValues().citizenshipStatus?.workAuthorizationType || '');
 
   useEffect(() => {
-    if(requestFromHomeState === 'submit_request_two' && isEditMode){
-      console.log("Submitting form 2")
-      form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))();
-      dispatch(setRequestFromHomeState('submit_received'))
+    const formValues = form.watch();
+
+    if (formValues.citizenshipStatus?.isPermanentResident !== undefined) {
+      setIsPermanentResident(formValues.citizenshipStatus.isPermanentResident);
     }
-  }, [requestFromHomeState, dispatch, form, isEditMode])
+
+    if (formValues.citizenshipStatus?.workAuthorizationType) {
+      setWorkAuthType(formValues.citizenshipStatus.workAuthorizationType);
+    }
+  }, [form.watch()]);
+
+  const formInitialized = useRef(false);
+
+  useEffect(() => {
+    if (isEditMode && formData && currentStep === 2 && !formInitialized.current) {
+      form.reset(formData);
+      formInitialized.current = true;
+    }
+  }, [formData, form.reset, currentStep, isEditMode]);
+
+  useEffect(() => {
+    if (requestFromHomeState === 'submit_request_two' && isEditMode) {
+      console.log('Submitting form 2');
+      form.handleSubmit(onSubmit, (errors) => console.error('Errors in form 2 submit', errors))();
+      dispatch(setRequestFromHomeState('submit_received'));
+    }
+  }, [requestFromHomeState, dispatch, form, isEditMode]);
+
+  useEffect(() => {
+    const isPermanentResidentValue = form.watch('citizenshipStatus.isPermanentResident');
+    if (isPermanentResidentValue !== undefined) {
+      setIsPermanentResident(isPermanentResidentValue);
+    }
+  }, [form.watch('citizenshipStatus.isPermanentResident')]);
 
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: DocumentTypeValues) => {
@@ -104,11 +126,11 @@ export default function OnboardingFormTwo({
         method: 'POST',
         body: formData,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       })
-        .then(response => response.json())
-        .then(data => {
+        .then((response) => response.json())
+        .then((data) => {
           const currentDocuments = form.getValues().documents || [];
 
           const newDocument = {
@@ -126,14 +148,14 @@ export default function OnboardingFormTwo({
           );
 
           // Update document preview
-          setDocumentPreviews(prev => ({
+          setDocumentPreviews((prev) => ({
             ...prev,
-            [type]: data.fileName
+            [type]: data.fileName,
           }));
 
           toast.success('File uploaded successfully');
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Upload failed:', error);
           toast.error('Failed to upload file');
         });
@@ -153,17 +175,24 @@ export default function OnboardingFormTwo({
   };
 
   function onSubmit(values: z.infer<typeof pageTwoSchema>) {
-    dispatch(updateFormData(values));
-
+    const allDocuments = [
+      ...(formData.documents || []),  
+      ...(values.documents || []) 
+    ].filter((doc, index, self) => 
+      index === self.findIndex(d => d.fileUrl === doc.fileUrl)
+    );
+    
     const completeData = {
-      ...formData, 
-      ...values, 
-      status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus
+      ...formData,
+      ...values,
+      documents: allDocuments, 
+      status: applicationStatus === ApplicationStatus.Rejected ? ApplicationStatus.Pending : applicationStatus,
     };
-
+  
+    dispatch(updateFormData(completeData));
     console.log('Submitting combined data:', completeData);
-    console.log(isResubmission)
-
+    console.log('Resubmission: ', isResubmission);
+  
     dispatch(submitOnboardingForm(completeData));
   }
 
@@ -175,11 +204,13 @@ export default function OnboardingFormTwo({
 
   return (
     <div className={`w-full max-w-3xl mx-auto p-6 bg-white ${isEditMode ? '' : 'rounded-lg shadow'}`}>
-      {!isEditMode && 
-      <h2 className="text-xl font-bold mb-4">Citizenship & References</h2>}
+      {!isEditMode && <h2 className="text-xl font-bold mb-4">Citizenship & References</h2>}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.error("Errors in form 2 submit", errors))} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (errors) => console.error('Errors in form 2 submit', errors))}
+          className="space-y-6"
+        >
           {/* Citizenship Status */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Citizenship Status</h3>
@@ -199,7 +230,7 @@ export default function OnboardingFormTwo({
                         setIsPermanentResident(isResident);
                         field.onChange(isResident);
                       }}
-                      defaultValue={field.value ? 'true' : 'false'}
+                      value={field.value ? 'true' : 'false'} // Controlled component
                       className="flex flex-row space-x-4"
                     >
                       <div className="flex items-center space-x-2">
@@ -227,7 +258,14 @@ export default function OnboardingFormTwo({
                     <FormLabel className="flex">
                       Status Type<span className="text-red-500 ml-1">*</span>
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={(value) => {
+                        setWorkAuthType(value);
+                        field.onChange(value);
+                      }}
+                      value={field.value || ''}
+                    >
+                      {' '}
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status type" />
@@ -269,7 +307,7 @@ export default function OnboardingFormTwo({
                           setWorkAuthType(value);
                           field.onChange(value);
                         }}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -671,7 +709,7 @@ export default function OnboardingFormTwo({
                   accept=".pdf,.jpg,.jpeg,.png"
                   onChange={(e) => handleFileUpload(e, DocumentType.WorkAuthorization)}
                 />
-                {documentPreviews['work_authorization'] && (
+                {documentPreviews[DocumentType.WorkAuthorization] && (
                   <div className="mt-2">
                     <p className="text-sm text-green-600">File uploaded</p>
                   </div>
@@ -681,13 +719,14 @@ export default function OnboardingFormTwo({
           </div>
 
           {/* Navigation Buttons */}
-          {!isEditMode && <div className="flex justify-between pt-6">
-            <Button type="button" variant="outline" onClick={handleBack}>
-              Back
-            </Button>
-            <Button type="submit">Submit</Button>
-          </div>}
-
+          {!isEditMode && (
+            <div className="flex justify-between pt-6">
+              <Button type="button" variant="outline" onClick={handleBack}>
+                Back
+              </Button>
+              <Button type="submit">Submit</Button>
+            </div>
+          )}
         </form>
       </Form>
     </div>
