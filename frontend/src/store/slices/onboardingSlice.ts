@@ -211,5 +211,6 @@ export const selectCurrentStep = (state: RootState) => state.onboarding.currentS
 export const selectApplicationStatus = (state: RootState) => state.onboarding.applicationStatus;
 export const selectFeedback = (state: RootState) => state.onboarding.feedback;
 export const selectDocuments = (state: RootState) => state.onboarding.formData.documents;
-export const selectRequestFromHomeState = (state: RootState) => state.onboarding.requestFromHomeState
+export const selectRequestFromHomeState = (state: RootState) => state.onboarding.requestFromHomeState;
+export const selectWorkAuthorizationType = (state: RootState) => state.onboarding.formData.citizenshipStatus.workAuthorizationType;
 export default onboardingSlice.reducer;

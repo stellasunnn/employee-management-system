@@ -18,7 +18,11 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Loader2, Upload, Download } from 'lucide-react';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { Navigate } from 'react-router-dom';
-import { selectApplicationStatus, fetchApplicationData } from '../store/slices/onboardingSlice';
+import {
+  selectApplicationStatus,
+  fetchApplicationData,
+  selectWorkAuthorizationType,
+} from '../store/slices/onboardingSlice';
 import { ApplicationStatus } from '../components/onboarding/schema';
 
 const VisaStatusContent = () => {
@@ -30,7 +34,7 @@ const VisaStatusContent = () => {
   const applicationStatus = useSelector(selectApplicationStatus);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingType, setUploadingType] = useState<DocumentType | null>(null);
-
+  const workAuthorizationType = useSelector(selectWorkAuthorizationType);
   useEffect(() => {
     dispatch(fetchApplicationData());
     dispatch(loadVisaDocuments());
@@ -39,6 +43,29 @@ const VisaStatusContent = () => {
   // Redirect to onboarding if application is pending
   if (applicationStatus === ApplicationStatus.Pending) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  if (workAuthorizationType !== 'F1') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <Card>
+              <CardHeader>
+                <CardTitle>Visa Status Management</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Alert variant="default">
+                  <AlertDescription>
+                    No documents need to be uploaded for your work authorization type.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
