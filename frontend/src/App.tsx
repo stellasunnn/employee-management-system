@@ -23,7 +23,6 @@ const AppContent = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    window.location.href = '/login';
   };
 
   return (
