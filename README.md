@@ -1,4 +1,4 @@
-# Onboarding Portal
+# Employee Management System
 
 A full-stack application for managing onboarding processes.
 
